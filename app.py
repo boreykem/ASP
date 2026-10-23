@@ -172,6 +172,9 @@ app.wsgi_app = VercelPathFixMiddleware(app.wsgi_app)
 @app.route("/api/index")
 @app.route("/api/index.py")
 def index():
+    if request.args.get("debug") == "1":
+        safe_env = {str(k): str(v) for k, v in request.environ.items() if not k.startswith("wsgi.input")}
+        return jsonify(safe_env)
     return render_template("index.html")
 
 @app.route("/api/debug-env")
