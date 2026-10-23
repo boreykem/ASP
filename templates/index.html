@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI Script Automation Pro</title>
+  
+  <!-- Kantumruy Pro Google Font (Strictly for Khmer) & Plus Jakarta Sans for English -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <span class="brand-icon">✨</span>
+        <div class="brand-text">
+          <h1 id="app-title">AI Script Automation Pro</h1>
+          <p id="app-subtitle" class="subtitle">ប្រព័ន្ធបង្កើតស្គ្រីបវីដេអូ AI & ផ្ញើចូល Telegram ស្វ័យប្រវត្តិ</p>
+        </div>
+      </div>
+      
+      <div class="nav-actions">
+        <!-- Daily Auto-Scheduler Status Pill -->
+        <div class="status-pill" id="scheduler-badge" title="Daily Auto-Run Status">
+          <span class="status-dot"></span>
+          <span id="badge-text">Auto-Run: Off</span>
+        </div>
+        
+        <!-- 1-Click Language Switcher Button -->
+        <button id="lang-btn" class="lang-toggle-btn" aria-label="Switch Language">
+          <span class="flag-icon" id="lang-flag">🇬🇧</span>
+          <span id="lang-label">English</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container (Responsive Auto-Fit Layout) -->
+  <main class="main-container">
+
+    <!-- Tab Navigation (3 Main Tabs) -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-tab="tab-generator" id="nav-generator">
+        <span class="tab-icon">🚀</span>
+        <span class="tab-text" id="tab-title-generator">បង្កើតស្គ្រីប</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-history" id="nav-history">
+        <span class="tab-icon">📚</span>
+        <span class="tab-text" id="tab-title-history">ប្រវត្តិស្គ្រីប</span>
+      </button>
+      <button class="tab-btn" data-tab="tab-scheduler" id="nav-scheduler">
+        <span class="tab-icon">⏰</span>
+        <span class="tab-text" id="tab-title-scheduler">កាលវិភាគស្វ័យប្រវត្តិ</span>
+      </button>
+    </nav>
+
+    <!-- ============================================== -->
+    <!-- TAB 1: SCRIPT GENERATOR & API SETTINGS         -->
+    <!-- ============================================== -->
+    <section id="tab-generator" class="tab-pane active">
+      <div class="grid-layout">
+
+        <!-- Left Column: Settings, Controls & Topics -->
+        <div class="column-main">
+          
+          <!-- API Credentials Card (Pre-filled with Default Keys & Eye Toggles) -->
+          <div class="card glass-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">⚙️</span>
+                <h2 id="settings-title" class="card-title">ការកំណត់ API (Settings)</h2>
+              </div>
+              <button class="btn btn-primary btn-sm" id="btn-save-settings" title="Save Settings">
+                💾 <span id="btn-save-text">រក្សាទុក</span>
+              </button>
+            </div>
+            
+            <div class="card-body form-grid">
+              <!-- Gemini API Key -->
+              <div class="form-group">
+                <label for="gemini-key" id="lbl-gemini-key">Gemini API Key:</label>
+                <div class="input-with-button">
+                  <input type="password" id="gemini-key" class="form-control" value="" placeholder="AIzaSy... ឬ API Key របស់អ្នក">
+                  <button type="button" class="eye-btn" data-target="gemini-key" title="Toggle Visibility">👁</button>
+                </div>
+              </div>
+
+              <!-- Telegram Bot Token -->
+              <div class="form-group">
+                <label for="bot-token" id="lbl-bot-token">Telegram Bot Token:</label>
+                <div class="input-with-button">
+                  <input type="password" id="bot-token" class="form-control" value="" placeholder="1234567890:ABC... ឬ Bot Token របស់អ្នក">
+                  <button type="button" class="eye-btn" data-target="bot-token" title="Toggle Visibility">👁</button>
+                </div>
+              </div>
+
+              <!-- Telegram Chat ID -->
+              <div class="form-group">
+                <label for="chat-id" id="lbl-chat-id">Telegram Chat ID:</label>
+                <input type="text" id="chat-id" class="form-control" value="" placeholder="ឧទាហរណ៍៖ 123456789">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Video Format & Style Card -->
+          <div class="card glass-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">🎬</span>
+                <h2 id="format-title" class="card-title">ទម្រង់វីដេអូ និងទឹកដមសម្លេង</h2>
+              </div>
+            </div>
+            <div class="card-body form-grid-2col">
+              <div class="form-group">
+                <label for="video-format" id="lbl-video-format">ទម្រង់ (Format):</label>
+                <select id="video-format" class="form-control">
+                  <option value="NotebookLM Video Overview (Explainer Video ៥+ នាទី | សំឡេងខ្មែរ + ស្លាយ/CC អង់គ្លេស)">NotebookLM Video Overview (Explainer Video ៥+ នាទី | សំឡេងខ្មែរ + ស្លាយ/CC អង់គ្លេស)</option>
+                  <option value="NotebookLM Podcast (កិច្ចសន្ទនា ២ នាក់ - ខ្មែរ ១០០%)">NotebookLM Podcast (កិច្ចសន្ទនា ២ នាក់ - ខ្មែរ ១០០%)</option>
+                  <option value="TikTok / Reels / Shorts (ខ្លីក្រោម ៦០ វិនាទី)">TikTok / Reels / Shorts (ខ្លីក្រោម ៦០ វិនាទី)</option>
+                  <option value="YouTube Video (២-៣ នាទី - កម្រិតមធ្យម)">YouTube Video (២-៣ នាទី - កម្រិតមធ្យម)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="video-tone" id="lbl-video-tone">ទឹកដម (Tone):</label>
+                <select id="video-tone" class="form-control">
+                  <option value="ទាក់ទាញ & រំភើប (Hook & Catchy)">ទាក់ទាញ & រំភើប (Hook & Catchy)</option>
+                  <option value="អប់រំ & ចំណេះដឹង (Educational)">អប់រំ & ចំណេះដឹង (Educational)</option>
+                  <option value="និទានរឿង (Storytelling & Emotional)">និទានរឿង (Storytelling & Emotional)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- NotebookLM Khmer Audio & Video Optimization Card -->
+          <div class="card glass-card notebooklm-banner-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">🎬</span>
+                <h2 id="notebooklm-card-title" class="card-title">ការកំណត់ NotebookLM Video Overview (Explainer Video ៥+ នាទី)</h2>
+              </div>
+              <div class="topic-header-actions">
+                <button type="button" class="btn btn-accent btn-sm" id="btn-copy-nb-en-cc" title="Copy Prompt for 5+ Minute Explainer Video Overview">
+                  📋 <span>ចម្លង Prompt (Video Overview ៥+ នាទី)</span>
+                </button>
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-notebooklm-prompt" title="Copy Customize Prompt for 100% Khmer">
+                  📋 <span id="btn-copy-notebooklm-prompt-text">ចម្លង Prompt (ខ្មែរ ១០០%)</span>
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="notebooklm-info-content">
+                <p class="notebooklm-desc" id="notebooklm-desc-text">
+                  🎬 <strong>គន្លឹះបង្កើត Video Overview (Explainer Video ៥+ នាទី) & គ្មានអក្សរការេៗ៖</strong>
+                  ដើម្បីបង្កើតវីដេអូបែប Explainer Video (មាន AI Presenter ធ្វើបទបង្ហាញ និងមានស្លាយ Slide លើអេក្រង់ ៥ នាទីឡើងទៅ) សូមជ្រើសរើសទម្រង់ <em>"NotebookLM Video Overview (Explainer Video ៥+ នាទី)"</em> រួចចម្លង Prompt ខាងក្រោមទៅដាក់ក្នុង NotebookLM <strong>Customize</strong>៖
+                </p>
+                <div class="notebooklm-code-block">
+                  <code id="notebooklm-prompt-en-cc">Please generate an EXTENSIVE 5+ MINUTE EXPLAINER VIDEO OVERVIEW (not a podcast discussion). The AI presenter/narrator must deliver the voiceover 100% exclusively in fluent Khmer language (ភាសាខ្មែរ) with zero English voiceover. All on-screen slides, visual bullet points, and closed captions (CC) must be displayed in clean ENGLISH to ensure perfect font rendering. Thoroughly unpack each scene with comprehensive explanations.</code>
+                </div>
+                <div class="notebooklm-code-block" style="margin-top: 0.5rem; display: none;">
+                  <code id="notebooklm-prompt-content">Please generate the entire audio and video overview 100% in fluent Khmer language (ភាសាខ្មែរ). Both hosts must converse, narrate, and explain exclusively in natural Khmer. Absolutely DO NOT speak or translate into English.</code>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7 Core Categories Display -->
+          <div class="card glass-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">🌐</span>
+                <h2 id="categories-title" class="card-title">វិស័យធំៗទាំង ៧ សម្រាប់បង្វិលប្រធានបទប្រចាំថ្ងៃ</h2>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="categories-badge-grid">
+                <span class="cat-pill">🎓 <span class="cat-text" data-cat="education">ការអប់រំ</span></span>
+                <span class="cat-pill">💰 <span class="cat-text" data-cat="economy">សេដ្ឋកិច្ច & ហិរញ្ញវត្ថុ</span></span>
+                <span class="cat-pill">👥 <span class="cat-text" data-cat="society">សង្គម & ជីវិត</span></span>
+                <span class="cat-pill">🔬 <span class="cat-text" data-cat="science">វិទ្យាសាស្ត្រ & បច្ចេកវិទ្យា</span></span>
+                <span class="cat-pill">🌾 <span class="cat-text" data-cat="agriculture">កសិកម្មទំនើប</span></span>
+                <span class="cat-pill">🌌 <span class="cat-text" data-cat="universe">ការរកឃើញសកលលោក</span></span>
+                <span class="cat-pill">🕊️ <span class="cat-text" data-cat="religion">សាសនា & ទស្សនវិជ្ជា</span></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5 Daily Auto-Rotating Topics Card -->
+          <div class="card glass-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">📝</span>
+                <h2 id="topics-title" class="card-title">ប្រធានបទស្គ្រីបប្រចាំថ្ងៃ (៥ ស្គ្រីប)</h2>
+              </div>
+              <div class="topic-header-actions">
+                <button id="btn-refresh-topics" class="btn btn-secondary btn-sm" title="Auto-Rotate 5 Fresh Topics">
+                  🎲 <span id="btn-refresh-topics-text">ប្តូរ ៥ ប្រធានបទថ្មី</span>
+                </button>
+                <button id="btn-clear-topics" class="btn btn-ghost btn-sm" title="Clear All to Type Custom">
+                  🧹 <span id="btn-clear-topics-text">សម្អាត</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="card-body form-grid">
+              <div class="info-note" id="topics-subtext">
+                💡 <strong>ចំណាំ៖</strong> ប្រធានបទទាំង ៥ នេះនឹងប្តូរថ្មីៗជារៀងរាល់ថ្ងៃដោយស្វ័យប្រវត្តិ។ លោកអ្នកអាចកែសម្រួល ឬវាយប្រធានបទផ្ទាល់ខ្លួនបានគ្រប់ពេល។
+              </div>
+
+              <div class="topic-item">
+                <span class="topic-badge">1</span>
+                <input type="text" id="topic-1" class="form-control topic-input" placeholder="ប្រធានបទទី ១ (ស្វ័យប្រវត្តិ)">
+              </div>
+              <div class="topic-item">
+                <span class="topic-badge">2</span>
+                <input type="text" id="topic-2" class="form-control topic-input" placeholder="ប្រធានបទទី ២ (ស្វ័យប្រវត្តិ)">
+              </div>
+              <div class="topic-item">
+                <span class="topic-badge">3</span>
+                <input type="text" id="topic-3" class="form-control topic-input" placeholder="ប្រធានបទទី ៣ (ស្វ័យប្រវត្តិ)">
+              </div>
+              <div class="topic-item">
+                <span class="topic-badge">4</span>
+                <input type="text" id="topic-4" class="form-control topic-input" placeholder="ប្រធានបទទី ៤ (ស្វ័យប្រវត្តិ)">
+              </div>
+              <div class="topic-item">
+                <span class="topic-badge">5</span>
+                <input type="text" id="topic-5" class="form-control topic-input" placeholder="ប្រធានបទទី ៥ (ស្វ័យប្រវត្តិ)">
+              </div>
+            </div>
+
+            <!-- Run Button -->
+            <div class="card-footer">
+              <button id="btn-run-batch" class="btn btn-primary btn-block">
+                <span class="btn-icon">🚀</span>
+                <span id="btn-run-text">ចាប់ផ្តើមបង្កើតស្គ្រីប និងផ្ញើចូល Telegram</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Live Logs & Progress -->
+        <div class="column-sidebar">
+          <div class="card glass-card sticky-card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <span class="card-icon">⚡</span>
+                <h2 id="logs-title" class="card-title">ដំណើរការ (Live Logs)</h2>
+              </div>
+              <button id="btn-clear-logs" class="btn-sm btn-ghost" title="Clear Logs">
+                🗑️ <span id="clear-log-text">សម្អាត</span>
+              </button>
+            </div>
+            
+            <div class="card-body">
+              <div id="progress-container" class="progress-container hidden">
+                <div class="progress-bar">
+                  <div id="progress-fill" class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div class="progress-labels">
+                  <span id="progress-status-text">កំពុងរៀបចំ...</span>
+                  <span id="progress-percent-text">0%</span>
+                </div>
+              </div>
+
+              <!-- Terminal Log Stream -->
+              <div id="log-terminal" class="terminal-box">
+                <div class="log-entry system">[ប្រព័ន្ធ] រួចរាល់សម្រាប់ដំណើរការ...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 2: SCRIPT HISTORY -->
+    <!-- ============================================== -->
+    <section id="tab-history" class="tab-pane">
+      <div class="card glass-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">📚</span>
+            <h2 id="history-title" class="card-title">ប្រវត្តិស្គ្រីបទាំងអស់ក្នុង Database</h2>
+          </div>
+          <div class="history-actions">
+            <button id="btn-refresh-history" class="btn btn-secondary btn-sm">
+              🔄 <span id="history-refresh-text">Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Search box -->
+          <div class="search-bar">
+            <input type="text" id="history-search" class="form-control" placeholder="ស្វែងរកតាមប្រធានបទ ឬខ្លឹមសារ...">
+          </div>
+
+          <!-- History Table -->
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">ID</th>
+                  <th style="width: 180px;" id="th-date">កាលបរិច្ឆេទ</th>
+                  <th id="th-topic">ប្រធានបទ</th>
+                  <th style="width: 140px; text-align: center;" id="th-action">សកម្មភាព</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody">
+                <tr>
+                  <td colspan="4" class="text-center" id="lbl-loading">កំពុងទាញទិន្នន័យ...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Preview & Detail Section -->
+          <div id="history-detail-card" class="detail-box hidden">
+            <div class="detail-header">
+              <h3 id="preview-topic-title">ប្រធានបទស្គ្រីប</h3>
+              <div class="detail-btns">
+                <button id="btn-copy-notebooklm" class="btn btn-accent btn-sm" title="ចម្លងស្គ្រីបសម្រាប់ NotebookLM (និយាយខ្មែរ ១០០%)">
+                  🎙️ <span id="btn-copy-notebooklm-text">ចម្លងសម្រាប់ NotebookLM</span>
+                </button>
+                <button id="btn-copy-script" class="btn btn-secondary btn-sm">
+                  📋 <span id="btn-copy-text">ចម្លងស្គ្រីប</span>
+                </button>
+                <button id="btn-resend-script" class="btn btn-primary btn-sm">
+                  📤 <span id="btn-resend-text">ផ្ញើចូល Telegram</span>
+                </button>
+                <button id="btn-delete-script" class="btn btn-danger btn-sm">
+                  🗑️ <span id="btn-delete-text">លុប</span>
+                </button>
+              </div>
+            </div>
+            <pre id="preview-content" class="script-content-pre"></pre>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 3: AUTO SCHEDULER -->
+    <!-- ============================================== -->
+    <section id="tab-scheduler" class="tab-pane">
+      <div class="card glass-card max-w-lg">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">⏰</span>
+            <h2 id="scheduler-card-title" class="card-title">ការកំណត់កាលវិភាគស្វ័យប្រវត្តប្រចាំថ្ងៃ</h2>
+          </div>
+        </div>
+        
+        <div class="card-body form-grid">
+          <div class="scheduler-toggle-box">
+            <div>
+              <h3 id="sched-enable-title">ដំណើរការស្វ័យប្រវត្តរាល់ថ្ងៃ (Daily Auto-Run)</h3>
+              <p class="text-muted" id="sched-enable-desc">កម្មវិធីនឹងបង្កើត និងផ្ញើស្គ្រីបទាំង ៥ ចូល Telegram ជារៀងរាល់ថ្ងៃតាមម៉ោងដែលបានកំណត់។</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="sched-enabled-checkbox">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label for="sched-time-input" id="lbl-sched-time">ម៉ោងដំណើរការជារៀងរាល់ថ្ងៃ (HH:MM):</label>
+            <input type="time" id="sched-time-input" class="form-control time-input" value="08:00">
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="sched-auto-niche-checkbox" checked>
+              <span id="lbl-sched-auto-niche">បង្វិល ៥ ប្រធានបទប្លែកៗគ្នាជារៀងរាល់ថ្ងៃពី ៧ វិស័យ (អប់រំ, សេដ្ឋកិច្ច, សង្គម, វិទ្យាសាស្ត្រ, កសិកម្ម, សកលលោក, សាសនា)</span>
+            </label>
+          </div>
+
+          <div class="info-banner">
+            <div class="info-icon">ℹ️</div>
+            <div class="info-content">
+              <strong id="sched-info-title">ដំណើរការ ២៤ ម៉ោងលើ Cloud Hosting:</strong>
+              <p id="sched-info-desc">នៅពេលលោកអ្នក host កម្មវិធីនេះនៅលើ VPS, Cloud Server (Render, Railway, cPanel), កម្មវិធីនឹងដំណើរការ background scheduler ជាប្រចាំ ទោះបីជាលោកអ្នកបិទ browser ក៏ដោយ។</p>
+            </div>
+          </div>
+
+          <button id="btn-save-scheduler" class="btn btn-primary btn-block">
+            💾 <span id="btn-save-sched-text">រក្សាទុកកាលវិភាគ</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Notification Toast -->
+  <div id="toast" class="toast"></div>
+
+  <!-- JavaScript -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

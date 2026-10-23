@@ -1,0 +1,19 @@
+{
+  "gemini_key": "YOUR_GEMINI_API_KEY",
+  "bot_token": "YOUR_TELEGRAM_BOT_TOKEN",
+  "chat_id": "YOUR_TELEGRAM_CHAT_ID",
+  "language": "km",
+  "format": "NotebookLM Video Overview (Explainer Video ៥+ នាទី | សំឡេងខ្មែរ + ស្លាយ/CC អង់គ្លេស)",
+  "tone": "ទាក់ទាញ & រំភើប (Hook & Catchy)",
+  "auto_daily_topics": true,
+  "topics": [
+    "គន្លឹះរៀនពូកែ",
+    "បច្ចេកវិទ្យា AI ជំនាន់ថ្មី"
+  ],
+  "scheduler": {
+    "enabled": false,
+    "time": "17:00",
+    "last_run": null,
+    "auto_diverse_topics": true
+  }
+}
