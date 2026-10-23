@@ -190,6 +190,120 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSchedulerStatus();
 });
 
+// ==========================================
+// Format Guidance & Prompts Data
+// ==========================================
+const FORMAT_DATA = {
+  video_overview: {
+    icon: "🎬",
+    titleKm: "ការកំណត់ NotebookLM Video Overview (Explainer Video ៥+ នាទី)",
+    titleEn: "NotebookLM Video Overview (5+ Min Explainer Video)",
+    descKm: "🎬 <strong>គន្លឹះបង្កើត Video Overview (Explainer Video ៥+ នាទី) & គ្មានអក្សរការេៗ៖</strong> ដើម្បីបង្កើតវីដេអូបែប Explainer Video (មាន AI Presenter ធ្វើបទបង្ហាញ និងមានស្លាយ Slide លើអេក្រង់ ៥ នាទីឡើងទៅ) សូមចម្លង Prompt ខាងក្រោមទៅដាក់ក្នុង NotebookLM <strong>Customize</strong>៖",
+    descEn: "🎬 <strong>5+ Min Explainer Video Overview (Zero Tofu Font Glitches):</strong> Copy this prompt into NotebookLM <strong>Customize</strong> to generate a 5+ minute multi-scene explainer video with spoken Khmer voiceover and on-screen slides/CC in clean English:",
+    prompt: "Please generate an EXTENSIVE 5+ MINUTE EXPLAINER VIDEO OVERVIEW (not a podcast discussion). The AI presenter/narrator must deliver the voiceover 100% exclusively in fluent Khmer language (ភាសាខ្មែរ) with zero English voiceover. All on-screen slides, visual bullet points, and closed captions (CC) must be displayed in clean ENGLISH to ensure perfect font rendering. Thoroughly unpack each scene with comprehensive explanations.",
+    btnKm: "ចម្លង Prompt (Video Overview ៥+ នាទី)",
+    btnEn: "Copy Video Overview Prompt",
+    shortKm: "Video Overview (៥+ នាទី)",
+    shortEn: "Video Overview (5+ Min)"
+  },
+  podcast: {
+    icon: "🎙️",
+    titleKm: "ការកំណត់ NotebookLM Podcast (កិច្ចសន្ទនា ២ នាក់ - ខ្មែរ ១០០%)",
+    titleEn: "NotebookLM Podcast (2-Host Discussion - 100% Khmer)",
+    descKm: "🎙️ <strong>គន្លឹះបង្កើត Podcast កិច្ចសន្ទនា ២ នាក់ជាភាសាខ្មែរ ១០០%៖</strong> ដើម្បីឱ្យ AI Hosts ទាំង ២ នាក់ជជែកវែកញែកស៊ីជម្រៅជាភាសាខ្មែរសុទ្ធសាធ (គ្មានពាក្យអង់គ្លេសលាយ) សូមចម្លង Prompt ខាងក្រោមទៅដាក់ក្នុង NotebookLM <strong>Customize</strong>៖",
+    descEn: "🎙️ <strong>100% Khmer Podcast Discussion Guide:</strong> To ensure both AI hosts converse, banter, and debate exclusively in fluent Khmer with zero English, copy this prompt into NotebookLM <strong>Customize</strong>:",
+    prompt: "Please generate the entire deep-dive podcast discussion 100% exclusively in fluent Khmer language (ភាសាខ្មែរ). Both hosts (Host 1 & Host 2) must converse, banter, debate, and explain naturally and engagingly in natural Khmer. Absolutely DO NOT speak, summarize, or translate into English.",
+    btnKm: "ចម្លង Prompt (Podcast ខ្មែរ ១០០%)",
+    btnEn: "Copy Podcast Prompt",
+    shortKm: "Podcast (ខ្មែរ ១០០%)",
+    shortEn: "Podcast (100% Khmer)"
+  },
+  tiktok: {
+    icon: "📱",
+    titleKm: "ការណែនាំស្គ្រីប TikTok / Reels / Shorts (ខ្លីក្រោម ៦០ វិនាទី)",
+    titleEn: "TikTok / Reels / Shorts Script Guide (< 60 Seconds)",
+    descKm: "📱 <strong>ទម្រង់ស្គ្រីបវីដេអូខ្លីបញ្ឈរ (Viral Short-Form):</strong> ស្គ្រីបត្រូវបានរៀបចំឡើងជា ៣ វគ្គច្បាស់លាស់ ផ្តោតលើការទាក់ចិត្តអ្នកមើលក្នុង ៣ វិនាទីដំបូង (High Retention Hook) និងអំពាវនាវឱ្យចុច Follow/Share/Like នៅចុងបញ្ចប់។ អាចចម្លងទៅបញ្ចូលក្នុង CapCut, HeyGen, ឬ AI Voiceover បានភ្លាមៗ។",
+    descEn: "📱 <strong>Viral Short-Form Script Guide:</strong> Specially structured for high retention on TikTok & Reels: 0-3s high-curiosity Hook, 3-45s fast-paced core value with visual cues, and 45-60s strong Call-to-Action.",
+    prompt: "ទម្រង់ស្គ្រីប TikTok / Shorts:\n• [00:00 - 00:03] HOOK (ទាក់ទាញខ្លាំងមិនឱ្យអូសរំលង) [សំឡេង + អក្សររត់ + Visual Cue]\n• [00:03 - 00:45] CORE VALUE (ខ្លឹមសារ ៣ ចំណុចខ្លី ខ្លឹម កាត់តលឿន)\n• [00:45 - 00:60] CTA (ដាស់តឿនឱ្យចុច Like, Follow និង Share)",
+    btnKm: "ចម្លងទម្រង់ TikTok Prompt",
+    btnEn: "Copy TikTok Format Prompt",
+    shortKm: "TikTok / Reels / Shorts",
+    shortEn: "TikTok / Reels / Shorts"
+  },
+  youtube: {
+    icon: "📹",
+    titleKm: "ការណែនាំស្គ្រីប YouTube Video (២-៣ នាទី - កម្រិតមធ្យម)",
+    titleEn: "YouTube Video Script Guide (2-3 Minutes - Standard)",
+    descKm: "📹 <strong>ទម្រង់ស្គ្រីប YouTube Video ស្តង់ដារ៖</strong> រៀបចំឡើងសម្រាប់មាតិកា YouTube កម្រិតមធ្យម មានសេចក្តីផ្តើមទាក់ទាញ (Intro & Hook), ការបកស្រាយស៊ីជម្រៅ ៣ ចំណុចសំខាន់ៗ (Body), និងសេចក្តីសន្និដ្ឋានអំពាវនាវឱ្យចុច Subscribe & Comment (Outro & CTA)។",
+    descEn: "📹 <strong>Standard YouTube Video Script Guide:</strong> Designed for standard 2-3 minute YouTube videos with an engaging Intro & Hook, 3 structured key points with visual/B-roll cues, and an engaging Outro with Subscribe CTA.",
+    prompt: "ទម្រង់ស្គ្រីប YouTube Video:\n• [00:00 - 00:20] INTRO & HOOK (សេចក្តីផ្តើម & បញ្ហាស្នូល)\n• [00:20 - 02:00] BODY CONTENT (៣ ចំណុចស៊ីជម្រៅ + B-Roll / Visual Cues)\n• [02:00 - 02:30] OUTRO & CTA (សេចក្តីសន្និដ្ឋាន & ចុច Subscribe)",
+    btnKm: "ចម្លងទម្រង់ YouTube Prompt",
+    btnEn: "Copy YouTube Format Prompt",
+    shortKm: "YouTube Video (២-៣ នាទី)",
+    shortEn: "YouTube Video (2-3 Min)"
+  }
+};
+
+function detectFormatKey(formatVal) {
+  const str = (formatVal || "").toLowerCase();
+  if (str.includes("video overview") || str.includes("explainer") || str.includes("៥+ នាទី") || str.includes("5+")) {
+    return "video_overview";
+  }
+  if (str.includes("podcast") || str.includes("សន្ទនា") || str.includes("២ នាក់")) {
+    return "podcast";
+  }
+  if (str.includes("tiktok") || str.includes("reels") || str.includes("shorts") || str.includes("៦០ វិនាទី") || str.includes("60")) {
+    return "tiktok";
+  }
+  if (str.includes("youtube") || str.includes("២-៣ នាទី") || str.includes("2-3")) {
+    return "youtube";
+  }
+  return "video_overview";
+}
+
+function updateFormatHelperCard(formatVal, animate = false) {
+  const select = document.getElementById("video-format");
+  const val = formatVal || (select ? select.value : "");
+  const key = detectFormatKey(val);
+  const data = FORMAT_DATA[key] || FORMAT_DATA.video_overview;
+  
+  const iconEl = document.getElementById("format-helper-icon");
+  const titleEl = document.getElementById("notebooklm-card-title");
+  const descEl = document.getElementById("notebooklm-desc-text");
+  const codeEl = document.getElementById("notebooklm-prompt-content");
+  const btnTextEl = document.getElementById("btn-copy-format-prompt-text");
+  const cardEl = document.getElementById("format-helper-card");
+  
+  if (iconEl) iconEl.textContent = data.icon;
+  if (titleEl) titleEl.textContent = currentLang === "km" ? data.titleKm : data.titleEn;
+  if (descEl) descEl.innerHTML = currentLang === "km" ? data.descKm : data.descEn;
+  if (codeEl) codeEl.textContent = data.prompt;
+  if (btnTextEl) btnTextEl.textContent = currentLang === "km" ? data.btnKm : data.btnEn;
+  
+  if (animate && cardEl) {
+    cardEl.classList.remove("format-highlight");
+    void cardEl.offsetWidth; // trigger reflow
+    cardEl.classList.add("format-highlight");
+  }
+}
+
+function handleFormatChange(e) {
+  const val = e.target.value;
+  updateFormatHelperCard(val, true);
+  
+  const key = detectFormatKey(val);
+  const data = FORMAT_DATA[key] || FORMAT_DATA.video_overview;
+  const name = currentLang === "km" ? data.shortKm : data.shortEn;
+  showToast(currentLang === "km" ? `បានប្តូរទៅទម្រង់៖ ${name}` : `Switched to format: ${name}`, "info");
+  
+  // Auto-save format to backend
+  fetch("/api/config", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ format: val })
+  }).catch(err => console.error("Error auto-saving format:", err));
+}
+
 function ensureFormatOptions() {
   const select = document.getElementById("video-format");
   if (!select) return;
@@ -314,11 +428,8 @@ function applyLanguage(lang) {
   document.getElementById("btn-resend-text").textContent = t.btnResend;
   document.getElementById("btn-delete-text").textContent = t.btnDelete;
   
-  // NotebookLM Elements
-  setTxt("notebooklm-card-title", t.notebooklmCardTitle);
-  const nbDesc = document.getElementById("notebooklm-desc-text");
-  if (nbDesc) nbDesc.innerHTML = t.notebooklmDesc;
-  setTxt("btn-copy-notebooklm-prompt-text", t.btnCopyNotebooklmPrompt);
+  // Dynamic Format Helper Card
+  updateFormatHelperCard(document.getElementById("video-format")?.value, false);
   setTxt("btn-copy-notebooklm-text", t.btnCopyNotebooklm);
   
   // Scheduler Tab
@@ -399,12 +510,21 @@ function setupEventListeners() {
   document.getElementById("btn-resend-script").addEventListener("click", resendSelectedScript);
   document.getElementById("btn-delete-script").addEventListener("click", deleteSelectedScript);
   
-  // NotebookLM Banner Prompt Copy
+  // Format dropdown change listener
+  const formatSelect = document.getElementById("video-format");
+  if (formatSelect) {
+    formatSelect.addEventListener("change", handleFormatChange);
+  }
+  
+  // Format Guidance Prompt Copy
+  const btnCopyFormat = document.getElementById("btn-copy-format-prompt");
+  if (btnCopyFormat) btnCopyFormat.addEventListener("click", copyActiveFormatPrompt);
+
   const btnCopyNbPrompt = document.getElementById("btn-copy-notebooklm-prompt");
-  if (btnCopyNbPrompt) btnCopyNbPrompt.addEventListener("click", copyNotebookLMPrompt);
+  if (btnCopyNbPrompt) btnCopyNbPrompt.addEventListener("click", copyActiveFormatPrompt);
   
   const btnCopyNbEnCc = document.getElementById("btn-copy-nb-en-cc");
-  if (btnCopyNbEnCc) btnCopyNbEnCc.addEventListener("click", copyNotebookLMEnCCPrompt);
+  if (btnCopyNbEnCc) btnCopyNbEnCc.addEventListener("click", copyActiveFormatPrompt);
   
   // Scheduler
   document.getElementById("btn-save-scheduler").addEventListener("click", saveSchedulerSettings);
@@ -428,7 +548,10 @@ async function loadInitialConfig() {
       document.getElementById("bot-token").value = c.bot_token || DEFAULT_BOT_TOKEN;
       document.getElementById("chat-id").value = c.chat_id || DEFAULT_CHAT_ID;
       
-      if (c.format) document.getElementById("video-format").value = c.format;
+      if (c.format) {
+        document.getElementById("video-format").value = c.format;
+      }
+      updateFormatHelperCard(document.getElementById("video-format").value, false);
       if (c.tone) document.getElementById("video-tone").value = c.tone;
       
       // If user had custom saved topics, load them. Otherwise load daily fresh rotating topics
@@ -702,22 +825,21 @@ function copySelectedScript() {
   });
 }
 
-function copyNotebookLMEnCCPrompt() {
-  const codeEl = document.getElementById("notebooklm-prompt-en-cc");
-  if (!codeEl) return;
-  const promptText = codeEl.textContent.trim();
-  navigator.clipboard.writeText(promptText).then(() => {
-    showToast(translations[currentLang].msgNbEnCcCopied || "បានចម្លង Prompt (សំឡេងខ្មែរ + CC អង់គ្លេស)!", "success");
-  });
-}
-
-function copyNotebookLMPrompt() {
+function copyActiveFormatPrompt() {
   const codeEl = document.getElementById("notebooklm-prompt-content");
   if (!codeEl) return;
   const promptText = codeEl.textContent.trim();
   navigator.clipboard.writeText(promptText).then(() => {
-    showToast(translations[currentLang].msgNotebooklmPromptCopied, "success");
+    showToast(currentLang === "km" ? "បានចម្លង Prompt ទៅកាន់ Clipboard រួចរាល់!" : "Prompt copied to clipboard!", "success");
   });
+}
+
+function copyNotebookLMEnCCPrompt() {
+  copyActiveFormatPrompt();
+}
+
+function copyNotebookLMPrompt() {
+  copyActiveFormatPrompt();
 }
 
 function copyScriptForNotebookLM() {

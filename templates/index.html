@@ -139,19 +139,16 @@
             </div>
           </div>
 
-          <!-- NotebookLM Khmer Audio & Video Optimization Card -->
-          <div class="card glass-card notebooklm-banner-card">
+          <!-- Dynamic Format Helper & Guidance Card -->
+          <div class="card glass-card notebooklm-banner-card format-helper-card" id="format-helper-card">
             <div class="card-header">
               <div class="card-title-group">
-                <span class="card-icon">🎬</span>
+                <span class="card-icon" id="format-helper-icon">🎬</span>
                 <h2 id="notebooklm-card-title" class="card-title">ការកំណត់ NotebookLM Video Overview (Explainer Video ៥+ នាទី)</h2>
               </div>
               <div class="topic-header-actions">
-                <button type="button" class="btn btn-accent btn-sm" id="btn-copy-nb-en-cc" title="Copy Prompt for 5+ Minute Explainer Video Overview">
-                  📋 <span>ចម្លង Prompt (Video Overview ៥+ នាទី)</span>
-                </button>
-                <button type="button" class="btn btn-secondary btn-sm" id="btn-copy-notebooklm-prompt" title="Copy Customize Prompt for 100% Khmer">
-                  📋 <span id="btn-copy-notebooklm-prompt-text">ចម្លង Prompt (ខ្មែរ ១០០%)</span>
+                <button type="button" class="btn btn-accent btn-sm" id="btn-copy-format-prompt" title="Copy Prompt for selected format">
+                  📋 <span id="btn-copy-format-prompt-text">ចម្លង Prompt (Video Overview ៥+ នាទី)</span>
                 </button>
               </div>
             </div>
@@ -161,11 +158,8 @@
                   🎬 <strong>គន្លឹះបង្កើត Video Overview (Explainer Video ៥+ នាទី) & គ្មានអក្សរការេៗ៖</strong>
                   ដើម្បីបង្កើតវីដេអូបែប Explainer Video (មាន AI Presenter ធ្វើបទបង្ហាញ និងមានស្លាយ Slide លើអេក្រង់ ៥ នាទីឡើងទៅ) សូមជ្រើសរើសទម្រង់ <em>"NotebookLM Video Overview (Explainer Video ៥+ នាទី)"</em> រួចចម្លង Prompt ខាងក្រោមទៅដាក់ក្នុង NotebookLM <strong>Customize</strong>៖
                 </p>
-                <div class="notebooklm-code-block">
-                  <code id="notebooklm-prompt-en-cc">Please generate an EXTENSIVE 5+ MINUTE EXPLAINER VIDEO OVERVIEW (not a podcast discussion). The AI presenter/narrator must deliver the voiceover 100% exclusively in fluent Khmer language (ភាសាខ្មែរ) with zero English voiceover. All on-screen slides, visual bullet points, and closed captions (CC) must be displayed in clean ENGLISH to ensure perfect font rendering. Thoroughly unpack each scene with comprehensive explanations.</code>
-                </div>
-                <div class="notebooklm-code-block" style="margin-top: 0.5rem; display: none;">
-                  <code id="notebooklm-prompt-content">Please generate the entire audio and video overview 100% in fluent Khmer language (ភាសាខ្មែរ). Both hosts must converse, narrate, and explain exclusively in natural Khmer. Absolutely DO NOT speak or translate into English.</code>
+                <div class="notebooklm-code-block format-code-block">
+                  <code id="notebooklm-prompt-content">Please generate an EXTENSIVE 5+ MINUTE EXPLAINER VIDEO OVERVIEW (not a podcast discussion). The AI presenter/narrator must deliver the voiceover 100% exclusively in fluent Khmer language (ភាសាខ្មែរ) with zero English voiceover. All on-screen slides, visual bullet points, and closed captions (CC) must be displayed in clean ENGLISH to ensure perfect font rendering. Thoroughly unpack each scene with comprehensive explanations.</code>
                 </div>
               </div>
             </div>

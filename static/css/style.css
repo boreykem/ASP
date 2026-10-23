@@ -899,3 +899,35 @@ input:checked + .slider:before {
     bottom: 1rem;
   }
 }
+
+/* Dynamic Format Helper Card */
+.format-helper-card {
+  position: relative;
+  transition: all 0.35s ease;
+  border-left: 4px solid var(--accent) !important;
+}
+
+.format-helper-card.format-highlight {
+  animation: formatPulse 0.5s ease;
+}
+
+@keyframes formatPulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+  50% { transform: scale(1.01); box-shadow: 0 0 25px rgba(99, 102, 241, 0.45); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(99, 102, 241, 0); }
+}
+
+.format-code-block {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.1rem;
+  margin-top: 0.75rem;
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #38bdf8;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+

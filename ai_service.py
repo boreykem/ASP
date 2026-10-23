@@ -14,7 +14,7 @@ MODELS_PRIORITY = [
 
 NOTEBOOKLM_KHMER_DIRECTIVE = (
     "======================================================================\n"
-    "🚨 NOTEBOOKLM / AI VIDEO SYSTEM DIRECTIVE: STRICT KHMER AUDIO & VIDEO 🚨\n"
+    "🎙️ NOTEBOOKLM PODCAST: STRICT KHMER DISCUSSION DIRECTIVE 🎙️\n"
     "• ភាសានិយាយ (Spoken Language): ភាសាខ្មែរ (Khmer) ១០០% ទាំងស្រុង។\n"
     "• ពិធីករ និងវាគ្មិនទាំងអស់ (All Hosts & Speakers) ត្រូវតែជជែក សន្ទនា និងអានជាភាសាខ្មែរសុទ្ធសាធ។\n"
     "• ហាមដាច់ខាតកុំនិយាយ ឬបកប្រែជាភាសាអង់គ្លេស (Strictly NO English voiceover or speech).\n"
@@ -24,11 +24,29 @@ NOTEBOOKLM_KHMER_DIRECTIVE = (
 
 NOTEBOOKLM_EXPLAINER_VIDEO_DIRECTIVE = (
     "======================================================================\n"
-    "🚨 GOOGLE NOTEBOOKLM: 5+ MINUTE EXPLAINER VIDEO OVERVIEW DIRECTIVE 🚨\n"
+    "🎬 GOOGLE NOTEBOOKLM: 5+ MINUTE EXPLAINER VIDEO OVERVIEW DIRECTIVE 🎬\n"
     "• FORMAT: EXPLAINER VIDEO OVERVIEW (វីដេអូបទបង្ហាញពន្យល់បែបអប់រំ និងចំណេះដឹង - មិនមែន Podcast ទេ).\n"
     "• DURATION: 5+ MINUTES (Extensive Multi-Scene Video Presentation).\n"
     "• SPOKEN NARRATION / VOICEOVER: 100% fluent Khmer language (ភាសាខ្មែរ). Single AI presenter delivering a clear, engaging explanation in Khmer.\n"
     "• ON-SCREEN TEXT, SLIDES & CLOSED CAPTIONS (CC): 100% ENGLISH (to ensure perfect visual presentation without font tofu box glitches).\n"
+    "======================================================================\n\n"
+)
+
+TIKTOK_SHORTS_DIRECTIVE = (
+    "======================================================================\n"
+    "📱 TIKTOK / REELS / SHORTS SCRIPT (ខ្លីក្រោម ៦០ វិនាទី) 📱\n"
+    "• ទម្រង់វីដេអូ៖ បញ្ឈរ 9:16 កាត់តលឿន រស់រវើក ទាក់ទាញក្នុង ៣ វិនាទីដំបូង\n"
+    "• រយៈពេលសរុប៖ ៣០ ទៅ ៦០ វិនាទី\n"
+    "• រចនាសម្ព័ន្ធ៖ [0-3s Hook] -> [3-45s ខ្លឹមសាររហ័ស & Visuals] -> [45-60s CTA]\n"
+    "======================================================================\n\n"
+)
+
+YOUTUBE_VIDEO_DIRECTIVE = (
+    "======================================================================\n"
+    "📹 YOUTUBE VIDEO SCRIPT (២-៣ នាទី - កម្រិតមធ្យម) 📹\n"
+    "• ទម្រង់វីដេអូ៖ ផ្តេក 16:9 ស៊ីជម្រៅ លម្អិត និងមានរចនាសម្ព័ន្ធច្បាស់លាស់\n"
+    "• រយៈពេលសរុប៖ ២ ទៅ ៣ នាទី\n"
+    "• រចនាសម្ព័ន្ធ៖ [Intro & Hook] -> [Body ៣ ចំណុចសំខាន់ៗ] -> [Outro & Subscribe CTA]\n"
     "======================================================================\n\n"
 )
 
@@ -37,22 +55,21 @@ def generate_script(api_key, topic, platform="TikTok", tone="ទាក់ទា�
     if not api_key:
         return False, "API Key is required", None
         
+    plat_str = str(platform).lower()
+    is_video_overview = any(k in plat_str for k in ["video overview", "explainer", "៥+ នាទី", "5+ នាទី", "5 នាទី", "cc អង់គ្លេស"])
+    is_podcast = any(k in plat_str for k in ["podcast", "សន្ទនា", "២ នាក់"])
+    is_tiktok = any(k in plat_str for k in ["tiktok", "reels", "shorts", "៦០ វិនាទី", "60"])
+    is_youtube = any(k in plat_str for k in ["youtube", "២-៣ នាទី", "2-3"])
+
     if lang == "en":
         prompt = (
-            f"Write an engaging short video script for the topic: '{topic}'\n\n"
+            f"Write an engaging video script for the topic: '{topic}'\n\n"
             f"Specifications:\n"
             f"- Platform format: {platform}\n"
             f"- Tone: {tone}\n"
-            f"- Structure:\n"
-            f"  1. [Hook] (First 3-5 seconds high curiosity grabber)\n"
-            f"  2. [Core Content] (Engaging, practical insights)\n"
-            f"  3. [Call to Action] (Closing prompt to comment, follow, or share)\n"
-            f"Format with clear stage directions and spoken voiceover lines."
+            f"- Clear stage directions and spoken voiceover lines."
         )
     else:
-        is_video_overview = any(k in str(platform).lower() for k in ["video overview", "explainer", "៥+ នាទី", "5+ នាទី", "5 នាទី", "cc អង់គ្លេស"])
-        is_podcast = any(k in str(platform).lower() for k in ["podcast", "សន្ទនា"])
-        
         if is_video_overview:
             prompt = (
                 f"🚨 GOOGLE NOTEBOOKLM: 5+ MINUTES EXPLAINER VIDEO OVERVIEW SCRIPT 🚨\n"
@@ -95,11 +112,52 @@ def generate_script(api_key, topic, platform="TikTok", tone="ទាក់ទា�
                 f"{NOTEBOOKLM_KHMER_DIRECTIVE}"
                 f"បន្ទាប់មកសរសេរកិច្ចពិភាក្សាជាភាសាខ្មែរពេញលេញរវាង ពិធីករ ទី១ និង ពិធីការិនី ទី២។"
             )
+        elif is_tiktok:
+            prompt = (
+                f"🚨 ស្គ្រីបវីដេអូខ្លី TIKTOK / REELS / SHORTS (ខ្លីក្រោម ៦០ វិនាទី) 🚨\n"
+                f"អ្នកត្រូវសរសេរស្គ្រីបវីដេអូខ្លីបញ្ឈរ (9:16) មួយជាភាសាខ្មែរយ៉ាងរស់រវើក និងទាក់ទាញបំផុតសម្រាប់ប្រធានបទ៖ '{topic}'\n\n"
+                f"លក្ខខណ្ឌកំណត់៖\n"
+                f"១. រយៈពេលសរុប (Duration): ក្រោម ៦០ វិនាទី (ប្រហែល ១០០ ទៅ ១៥០ ពាក្យ កាត់តលឿន មិនវែងអន្លាយឡើយ)។\n"
+                f"២. ភាសា (Language): ភាសាខ្មែរ (Khmer) ១០០% ទឹកដមសម្លេង៖ {tone}។\n\n"
+                f"សូមចាប់ផ្តើមដោយដាក់ Header ខាងក្រោមនេះនៅបន្ទាត់ទីមួយជានិច្ច៖\n"
+                f"{TIKTOK_SHORTS_DIRECTIVE}"
+                f"រចនាសម្ព័ន្ធស្គ្រីប TikTok / Shorts (សូមប្រើតែភាសាខ្មែរ)៖\n"
+                f"• [00:00 - 00:03] HOOK (បើកឆាកទាក់ទាញខ្លាំងភ្លាមៗ ធ្វើឱ្យគេឈប់អូសរំលង)៖\n"
+                f"  - សំឡេងអាន (Voiceover): ...\n"
+                f"  - អក្សររត់លើអេក្រង់ (On-Screen Text): ...\n"
+                f"  - ប្លង់រូបភាព/សកម្មភាព (Visual Cue): ...\n\n"
+                f"• [00:03 - 00:45] CORE VALUE (ខ្លឹមសារស្នូលរហ័ស ៣ ចំណុចខ្លី ខ្លឹម)៖\n"
+                f"  - ចំណុចទី ១: [សំឡេងអាន & ប្លង់រូបភាព]\n"
+                f"  - ចំណុចទី ២: [សំឡេងអាន & ប្លង់រូបភាព]\n"
+                f"  - ចំណុចទី ៣: [សំឡេងអាន & ប្លង់រូបភាព]\n\n"
+                f"• [00:45 - 00:60] CALL TO ACTION (CTA ដាស់តឿនបញ្ចប់)៖\n"
+                f"  - សំឡេងអាន (Voiceover): [អំពាវនាវឱ្យចុច Like, Follow និងបញ្ចេញមតិយោបល់]\n"
+                f"  - អក្សររត់លើអេក្រង់: [ចុច Follow & Share]"
+            )
+        elif is_youtube:
+            prompt = (
+                f"🚨 ស្គ្រីបវីដេអូ YOUTUBE VIDEO (២-៣ នាទី - កម្រិតមធ្យម) 🚨\n"
+                f"អ្នកត្រូវសរសេរស្គ្រីបវីដេអូ YouTube កម្រិតមធ្យមមួយជាភាសាខ្មែរយ៉ាងស៊ីជម្រៅសម្រាប់ប្រធានបទ៖ '{topic}'\n\n"
+                f"លក្ខខណ្ឌកំណត់៖\n"
+                f"១. រយៈពេលសរុប (Duration): ២ ទៅ ៣ នាទី (ប្រហែល ៤០០ ទៅ ៦០០ ពាក្យ មានព័ត៌មានលម្អិត និងឧទាហរណ៍)។\n"
+                f"២. ភាសា (Language): ភាសាខ្មែរ (Khmer) ១០០% ទឹកដមសម្លេង៖ {tone}។\n\n"
+                f"សូមចាប់ផ្តើមដោយដាក់ Header ខាងក្រោមនេះនៅបន្ទាត់ទីមួយជានិច្ច៖\n"
+                f"{YOUTUBE_VIDEO_DIRECTIVE}"
+                f"រចនាសម្ព័ន្ធស្គ្រីប YouTube Video ២-៣ នាទី (សូមប្រើតែភាសាខ្មែរ)៖\n"
+                f"• [00:00 - 00:20] INTRO & HOOK (សេចក្តីផ្តើម & បញ្ហាស្នូល)៖\n"
+                f"  - សំឡេងអាន: [សេចក្តីផ្តើមទាក់ទាញ និងប្រាប់ពីអត្ថប្រយោជន៍ដែលទស្សនិកជននឹងទទួលបាន]\n"
+                f"  - Visual Cue / B-Roll: [ការណែនាំរូបភាពឬវីដេអូប្លង់កាត់]\n\n"
+                f"• [00:20 - 02:00] BODY CONTENT (ខ្លឹមសារស៊ីជម្រៅ ៣ ចំណុចធំៗ)៖\n"
+                f"  - ចំណុចទី ១: [ការពន្យល់លម្អិត + B-Roll Cue]\n"
+                f"  - ចំណុចទី ២: [ការពន្យល់លម្អិត + ឧទាហរណ៍ជាក់ស្តែង + B-Roll Cue]\n"
+                f"  - ចំណុចទី ៣: [ការពន្យល់លម្អិត + គន្លឹះអនុវត្ត + B-Roll Cue]\n\n"
+                f"• [02:00 - 02:30] OUTRO & CTA (សេចក្តីសន្និដ្ឋាន & ដាស់តឿនបញ្ចប់)៖\n"
+                f"  - សេចក្តីសង្ខេបចំណុចសំខាន់ៗ\n"
+                f"  - សំណួរជំរុញឱ្យទស្សនិកជន Comment\n"
+                f"  - អំពាវនាវឱ្យចុច Subscribe, Like និងចែករំលែក"
+            )
         else:
             prompt = (
-                f"🚨 សេចក្តីណែនាំដាច់ខាតសម្រាប់ GOOGLE NOTEBOOKLM & AI VIDEO GENERATOR 🚨\n"
-                f"អ្នកប្រើប្រាស់នឹងចម្លងស្គ្រីបនេះទៅបង្កើតវីដេអូ ឬសំឡេងក្នុង Google NotebookLM (Audio/Video Overview)។\n"
-                f"ដើម្បីបង្ការកុំឱ្យ NotebookLM ជ្រើសរើសសំឡេងនិយាយជាភាសាអង់គ្លេស អ្នកត្រូវតែសរសេរជាភាសាខ្មែរ ១០០% ទាំងស្រុង ដោយគ្មានពាក្យអង់គ្លេសលាយឡើយ។\n\n"
                 f"សូមសរសេរស្គ្រីបវីដេអូទាក់ទាញមួយជាភាសាខ្មែរសម្រាប់ប្រធានបទ៖ '{topic}'\n\n"
                 f"ការកំណត់លម្អិត៖\n"
                 f"- ទម្រង់មាតិកា (Format): {platform}\n"
@@ -107,11 +165,21 @@ def generate_script(api_key, topic, platform="TikTok", tone="ទាក់ទា�
                 f"- រចនាសម្ព័ន្ធស្គ្រីប (សូមប្រើតែភាសាខ្មែរ)៖\n"
                 f"  ១. [វគ្គទី ១៖ បើកឆាកទាក់ទាញខ្លាំង (៣ វិនាទីដំបូង)]\n"
                 f"  ២. [វគ្គទី ២៖ ខ្លឹមសារស្នូលលម្អិត (ងាយយល់ និងមានប្រយោជន៍)]\n"
-                f"  ៣. [វគ្គទី ៣៖ សេចក្តីសន្និដ្ឋាន & អំពាវនាវបញ្ចប់]\n\n"
-                f"សូមចាប់ផ្តើមស្គ្រីបដោយដាក់ Header ខាងក្រោមនេះនៅបន្ទាត់ទីមួយជានិច្ច៖\n"
-                f"{NOTEBOOKLM_KHMER_DIRECTIVE}"
+                f"  ៣. [វគ្គទី ៣៖ សេចក្តីសន្និដ្ឋាន & អំពាវនាវបញ្ចប់]\n"
             )
         
+    def _attach_directive(text):
+        cleaned = text.strip()
+        if is_video_overview and "NOTEBOOKLM" not in cleaned.upper():
+            return NOTEBOOKLM_EXPLAINER_VIDEO_DIRECTIVE + cleaned
+        elif is_podcast and "NOTEBOOKLM" not in cleaned.upper():
+            return NOTEBOOKLM_KHMER_DIRECTIVE + cleaned
+        elif is_tiktok and "TIKTOK" not in cleaned.upper():
+            return TIKTOK_SHORTS_DIRECTIVE + cleaned
+        elif is_youtube and "YOUTUBE" not in cleaned.upper():
+            return YOUTUBE_VIDEO_DIRECTIVE + cleaned
+        return cleaned
+
     last_error = None
     
     # 1. Modern google.genai
@@ -121,18 +189,12 @@ def generate_script(api_key, topic, platform="TikTok", tone="ទាក់ទា�
             try:
                 res = client.models.generate_content(model=model_id, contents=prompt)
                 if res and res.text:
-                    cleaned_text = res.text.strip()
-                    if is_video_overview and "NOTEBOOKLM" not in cleaned_text.upper():
-                        cleaned_text = NOTEBOOKLM_EXPLAINER_VIDEO_DIRECTIVE + cleaned_text
-                    elif lang == "km" and "NOTEBOOKLM" not in cleaned_text.upper():
-                        cleaned_text = NOTEBOOKLM_KHMER_DIRECTIVE + cleaned_text
-                    return True, cleaned_text, model_id
+                    return True, _attach_directive(res.text), model_id
             except Exception as err:
                 last_error = err
                 err_str = str(err)
                 if 'API_KEY_INVALID' in err_str or 'API key not valid' in err_str:
                     return False, f"Invalid API Key: {err_str}", None
-                # If model not found or quota exhausted on this model, continue to next model
                 continue
     except Exception as e:
         last_error = e
@@ -145,12 +207,7 @@ def generate_script(api_key, topic, platform="TikTok", tone="ទាក់ទា�
                 model = genai_legacy.GenerativeModel(model_id)
                 res = model.generate_content(prompt)
                 if res and res.text:
-                    cleaned_text = res.text.strip()
-                    if is_video_overview and "NOTEBOOKLM" not in cleaned_text.upper():
-                        cleaned_text = NOTEBOOKLM_EXPLAINER_VIDEO_DIRECTIVE + cleaned_text
-                    elif lang == "km" and "NOTEBOOKLM" not in cleaned_text.upper():
-                        cleaned_text = NOTEBOOKLM_KHMER_DIRECTIVE + cleaned_text
-                    return True, cleaned_text, model_id
+                    return True, _attach_directive(res.text), model_id
             except Exception as err:
                 last_error = err
                 continue
