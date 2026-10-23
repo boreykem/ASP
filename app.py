@@ -146,7 +146,15 @@ class VercelPathFixMiddleware:
         self.wsgi_app = wsgi_app
 
     def __call__(self, environ, start_response):
-        matched_path = environ.get("HTTP_X_MATCHED_PATH") or environ.get("HTTP_X_NOW_ROUTE_URI")
+        matched_path = (
+            environ.get("HTTP_X_MATCHED_PATH") or 
+            environ.get("HTTP_X_NOW_ROUTE_URI") or 
+            environ.get("HTTP_X_VERCEL_REWRITE_SOURCE") or
+            environ.get("HTTP_X_ORIGINAL_URI") or
+            environ.get("HTTP_X_FORWARDED_URI") or
+            environ.get("RAW_URI") or
+            environ.get("REQUEST_URI")
+        )
         if matched_path:
             if "?" in matched_path:
                 matched_path = matched_path.split("?", 1)[0]
@@ -165,6 +173,13 @@ app.wsgi_app = VercelPathFixMiddleware(app.wsgi_app)
 @app.route("/api/index.py")
 def index():
     return render_template("index.html")
+
+@app.route("/api/debug-env")
+def debug_env():
+    return jsonify({
+        "path_info": request.environ.get("PATH_INFO"),
+        "raw_headers": {k: v for k, v in request.environ.items() if k.startswith("HTTP_") or "URI" in k or "PATH" in k}
+    })
 
 @app.route("/api/config", methods=["GET"])
 def get_config():
