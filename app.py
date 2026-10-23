@@ -139,9 +139,30 @@ if not os.environ.get("VERCEL"):
     threading.Thread(target=scheduler_daemon_loop, daemon=True).start()
 
 # ------------------------------------------
+# Vercel WSGI Middleware for Routing Fix
+# ------------------------------------------
+class VercelPathFixMiddleware:
+    def __init__(self, wsgi_app):
+        self.wsgi_app = wsgi_app
+
+    def __call__(self, environ, start_response):
+        matched_path = environ.get("HTTP_X_MATCHED_PATH") or environ.get("HTTP_X_NOW_ROUTE_URI")
+        if matched_path:
+            if "?" in matched_path:
+                matched_path = matched_path.split("?", 1)[0]
+            environ["PATH_INFO"] = matched_path
+        elif environ.get("PATH_INFO") in ("/api/index.py", "/api/index", "/api"):
+            environ["PATH_INFO"] = "/"
+        return self.wsgi_app(environ, start_response)
+
+app.wsgi_app = VercelPathFixMiddleware(app.wsgi_app)
+
+# ------------------------------------------
 # Flask Routes
 # ------------------------------------------
 @app.route("/")
+@app.route("/api/index")
+@app.route("/api/index.py")
 def index():
     return render_template("index.html")
 
