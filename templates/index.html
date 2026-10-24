@@ -154,12 +154,12 @@
             <div class="card-footer" style="display: flex; flex-direction: column; gap: 12px;">
               <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255, 255, 255, 0.04); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
                 <label class="switch-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
-                  <input type="checkbox" id="gen-auto-video" style="width: 18px; height: 18px; accent-color: var(--accent);">
-                  <span id="gen-auto-video-label">🎬 <strong>ផលិតវីដេអូ Reels 9:16 ស្វ័យប្រវត្តិ</strong> (សំឡេងខ្មែរ + B-Roll)</span>
+                  <input type="checkbox" id="gen-auto-video" checked style="width: 18px; height: 18px; accent-color: var(--accent);">
+                  <span id="gen-auto-video-label">🎬 <strong>ផ្តោតលើ Video Output (Reels 9:16)</strong></span>
                 </label>
                 <label class="switch-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
-                  <input type="checkbox" id="gen-auto-facebook" checked style="width: 18px; height: 18px; accent-color: #1877f2;">
-                  <span id="gen-auto-facebook-label">📘 <strong>Auto-Post ទៅកាន់ Facebook Pages ទាំងអស់</strong></span>
+                  <input type="checkbox" id="gen-auto-approval" checked style="width: 18px; height: 18px; accent-color: #3b82f6;">
+                  <span id="gen-auto-approval-label">📲 <strong>ផ្ញើ Link ទៅ Telegram ឱ្យ Approve ជាមុន</strong> (1-Click Approve)</span>
                 </label>
               </div>
 
@@ -311,17 +311,11 @@
                 <button id="btn-copy-script" class="btn btn-secondary btn-sm">
                   📋 <span id="btn-copy-text">ចម្លងស្គ្រីប</span>
                 </button>
-                <button id="btn-resend-script" class="btn btn-primary btn-sm">
-                  📤 <span id="btn-resend-text">ផ្ញើចូល Telegram</span>
-                </button>
-                <button id="btn-create-veo-video" class="btn btn-primary btn-sm" title="ផលិតវីដេអូ AI តាម Google Veo (Gemini Video AI)">
-                  ✨ <span id="btn-create-veo-video-text">Google Veo AI Video</span>
-                </button>
-                <button id="btn-create-video" class="btn btn-accent btn-sm" title="ផលិតវីដេអូ Reels (9:16) ដោយស្វ័យប្រវត្តិ">
+                <button id="btn-create-video" class="btn btn-primary btn-sm" title="ផលិតវីដេអូ Reels (9:16) ដោយស្វ័យប្រវត្តិ">
                   🎬 <span id="btn-create-video-text">ផលិតវីដេអូ Reels AI</span>
                 </button>
-                <button id="btn-post-facebook" class="btn btn-secondary btn-sm" title="Post ឡើង Facebook Page">
-                  📘 <span id="btn-post-facebook-text">Post Facebook</span>
+                <button id="btn-send-approval" class="btn btn-accent btn-sm" title="ផ្ញើវីដេអូទៅ Telegram ដើម្បីសុំ Approval">
+                  📲 <span id="btn-send-approval-text">ផ្ញើទៅ Telegram ដើម្បី Approve</span>
                 </button>
                 <button id="btn-delete-script" class="btn btn-danger btn-sm">
                   🗑️ <span id="btn-delete-text">លុប</span>
@@ -338,6 +332,9 @@
                 <div style="flex: 1; min-width: 250px;">
                   <p id="video-info-status" style="font-size: 0.9rem; margin-bottom: 10px; color: #a0aec0;">វីដេអូបញ្ឈរគុណភាព HD 1080x1920 ជាមួយសំឡេងខ្មែរ Neural Voice និងប្លង់ B-Roll រួចរាល់សម្រាប់ផ្សព្វផ្សាយ។</p>
                   <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                    <button id="btn-preview-send-approval" class="btn btn-accent btn-sm">
+                      📲 <span>ផ្ញើទៅ Telegram ដើម្បី Approve</span>
+                    </button>
                     <button id="btn-broadcast-video-fb" class="btn btn-primary btn-sm">
                       🚀 <span id="btn-broadcast-video-fb-text">បង្ហោះវីដេអូទៅកាន់ Facebook Pages ទាំងអស់</span>
                     </button>
@@ -353,17 +350,20 @@
             <div id="url-pull-box" style="margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.06); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.25);">
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <h4 style="margin: 0; color: #60a5fa; display: flex; align-items: center; gap: 6px;">
-                  <span>🔗</span> <span id="title-url-pull">បង្ហោះវីដេអូតាម URL Pull (Direct Video URL Pull to 23 Pages)</span>
+                  <span>🔗</span> <span id="title-url-pull">វីដេអូផ្ទាល់ខ្លួន (Video Link) & Telegram Approval មុននឹង Post</span>
                 </h4>
-                <span class="badge" style="background: rgba(59, 130, 246, 0.25); color: #bfdbfe; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">High Speed</span>
+                <span class="badge" style="background: rgba(59, 130, 246, 0.25); color: #bfdbfe; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">1-Click Approval</span>
               </div>
               <p class="text-muted" id="desc-url-pull" style="font-size: 0.8rem; margin: 0 0 10px 0;">
-                💡 មិនបាច់ Render វីដេអូឡើយ! ប្រសិនបើអ្នកមាន Link វីដេអូស្រាប់ (ពី NotebookLM, Google Drive ឬ Cloud) សូម Paste នៅទីនេះ ដើម្បីឱ្យ Facebook ទាញយកទៅ Post គ្រប់ ២៣ Pages ក្នុងពេលតែ ២ វិនាទី។
+                💡 បញ្ចូល Link វីដេអូ (MP4, Google Drive, CapCut) ➔ ផ្ញើទៅ Telegram ដើម្បីឱ្យអ្នក Approve ជាមុន ➔ បង្ហោះចូល Facebook ២៣ Pages ដោយស្វ័យប្រវត្តិ!
               </p>
               <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <input type="url" id="custom-video-url-input" class="form-control" style="flex: 1; min-width: 240px;" placeholder="https://domain.com/video.mp4">
+                <button id="btn-url-send-approval" class="btn btn-accent btn-sm" style="white-space: nowrap;">
+                  📲 <span>ផ្ញើទៅ Telegram សុំ Approve</span>
+                </button>
                 <button id="btn-broadcast-url-fb" class="btn btn-primary btn-sm" style="white-space: nowrap;">
-                  🚀 <span id="btn-broadcast-url-fb-text">បង្ហោះចូលគ្រប់ ២៣ Pages</span>
+                  🚀 <span id="btn-broadcast-url-fb-text">បង្ហោះផ្ទាល់ (Direct)</span>
                 </button>
               </div>
               <span id="url-broadcast-status" class="text-muted" style="font-size: 0.82rem; display: block; margin-top: 6px;"></span>
@@ -611,6 +611,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- JavaScript -->
-  <script src="/static/js/app.js?v=20261024_12"></script>
+  <script src="/static/js/app.js?v=20261024_13"></script>
 </body>
 </html>

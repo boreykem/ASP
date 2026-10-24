@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, render_template_string, request, jsonify, send_from_directory
 import threading
 import time
 import datetime
@@ -595,6 +595,164 @@ def api_broadcast_video_url():
         
     ok, summary, results = facebook_service.broadcast_video_to_pages(pages_to_post, video_url, description)
     return jsonify({"success": ok, "message": summary, "results": results})
+
+@app.route("/api/video/send-for-approval", methods=["POST"])
+def api_send_video_for_approval():
+    data = request.json or {}
+    title = data.get("title", "វីដេអូ Reels ថ្មី").strip()
+    description = data.get("description", "").strip()
+    video_url = data.get("video_url", "").strip()
+    script_id = data.get("script_id")
+    
+    if not video_url:
+        return jsonify({"success": False, "error": "សូមបញ្ជាក់ Link វីដេអូជាមុនសិន!"}), 400
+        
+    cfg = load_config()
+    bot_token = cfg.get("bot_token")
+    chat_id = cfg.get("chat_id")
+    if not bot_token or not chat_id:
+        return jsonify({"success": False, "error": "សូមកំណត់ Telegram Bot Token និង Chat ID ក្នុង Settings ជាមុនសិន!"}), 400
+        
+    approval_id = database.create_video_approval(title, description, video_url, script_id=script_id)
+    
+    # Base URL for public web app
+    host_url = request.host_url.rstrip("/")
+    if "localhost" in host_url or "127.0.0.1" in host_url:
+        web_base_url = "https://asp-ac.vercel.app"
+    else:
+        web_base_url = host_url
+        
+    ok, msg = telegram_service.send_video_approval_card(
+        bot_token=bot_token,
+        chat_id=chat_id,
+        title=title,
+        video_url=video_url,
+        description=description,
+        approval_id=approval_id,
+        web_base_url=web_base_url
+    )
+    
+    if ok:
+        return jsonify({
+            "success": True,
+            "message": "បានផ្ញើវីដេអូទៅកាន់ Telegram ដើម្បីពិនិត្យ និង Approve រួចរាល់!",
+            "approval_id": approval_id
+        })
+    else:
+        return jsonify({"success": False, "error": f"បរាជ័យក្នុងការផ្ញើទៅ Telegram: {msg}"}), 500
+
+@app.route("/api/approve/<int:approval_id>", methods=["GET", "POST"])
+def api_handle_approval(approval_id):
+    action = request.args.get("action", "publish").lower()
+    record = database.get_video_approval(approval_id)
+    if not record:
+        return render_template_string("""
+        <!DOCTYPE html>
+        <html lang="km">
+        <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>404 - រកមិនឃើញ</title><style>body{background:#0b0f19;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;}.box{background:rgba(255,255,255,0.05);padding:30px;border-radius:16px;border:1px solid rgba(255,255,255,0.1);max-width:400px;}</style></head>
+        <body><div class="box"><h2>❌ រកមិនឃើញទិន្នន័យវីដេអូឡើយ</h2><p style="color:#94a3b8;">Approval ID #{{ id }} មិនមានក្នុងប្រព័ន្ធ។</p><a href="/" style="display:inline-block;margin-top:15px;color:#60a5fa;text-decoration:none;">← ត្រឡប់ទៅកាន់ App</a></div></body></html>
+        """, id=approval_id), 404
+
+    cfg = load_config()
+    bot_token = cfg.get("bot_token")
+    chat_id = cfg.get("chat_id")
+    
+    if action == "publish":
+        if record.get("status") == "APPROVED":
+            status_text = "វីដេអូនេះត្រូវបាន Approve និងបង្ហោះរួចហើយកាលពីមុន!"
+            summary = "រួចរាល់ហើយ"
+        else:
+            pages_to_post = cfg.get("facebook_selected_pages") or []
+            if not pages_to_post:
+                page_id = cfg.get("facebook_page_id")
+                access_token = cfg.get("facebook_access_token")
+                if page_id and access_token:
+                    pages_to_post = [{"id": page_id, "name": "Primary Page", "access_token": access_token}]
+                    
+            video_url = record.get("video_url")
+            desc = f"🎬 {record.get('title')}\n\n{record.get('description')}"
+            
+            fb_ok, summary, results = facebook_service.broadcast_video_to_pages(pages_to_post, video_url, desc)
+            database.update_video_approval_status(approval_id, "APPROVED", json.dumps(results))
+            status_text = summary
+            
+            # Send confirmation to Telegram
+            if bot_token and chat_id:
+                conf_msg = (
+                    f"🎉 *[វីដេអូត្រូវបាន APPROVE & បង្ហោះជោគជ័យ]*\n\n"
+                    f"📌 *ប្រធានបទ:* {record.get('title')}\n"
+                    f"📊 *ស្ថានភាព:* {summary}\n\n"
+                    f"✅ វីដេអូត្រូវបានផ្សាយផ្ទាល់លើគ្រប់ Facebook Pages រួចរាល់!"
+                )
+                telegram_service.send_message(bot_token, chat_id, conf_msg)
+
+        return render_template_string("""
+        <!DOCTYPE html>
+        <html lang="km">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Approve Video - AI Automation Pro</title>
+          <style>
+            body { background: #070d19; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+            .card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 20px; padding: 35px 25px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+            .icon { font-size: 3.5rem; margin-bottom: 15px; }
+            h2 { color: #34d399; margin: 0 0 10px 0; font-size: 1.45rem; }
+            p { color: #94a3b8; font-size: 0.92rem; line-height: 1.6; margin: 0 0 15px 0; }
+            .topic { background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; font-weight: 600; color: #60a5fa; margin-bottom: 20px; word-break: break-word; }
+            .btn { display: inline-block; background: linear-gradient(135deg, #3b82f6, #6366f1); color: #fff; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; transition: 0.2s; }
+            .btn:hover { opacity: 0.9; transform: translateY(-2px); }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="icon">🎉</div>
+            <h2>វីដេអូត្រូវបាន Approve ជោគជ័យ!</h2>
+            <div class="topic">{{ title }}</div>
+            <p>{{ status_text }}</p>
+            <p style="font-size:0.8rem; color:#64748b;">វីដេអូត្រូវបានផ្សាយបន្តផ្ទាល់ចូលទៅកាន់ Facebook Pages ទាំងអស់ដោយសុវត្ថិភាព។</p>
+            <a href="/" class="btn">← ត្រឡប់ទៅកាន់ Dashboard</a>
+          </div>
+        </body>
+        </html>
+        """, title=record.get("title"), status_text=status_text)
+        
+    elif action == "reject":
+        database.update_video_approval_status(approval_id, "REJECTED")
+        if bot_token and chat_id:
+            reject_msg = f"❌ *[វីដេអូត្រូវបាន REJECT]*\n\n📌 *ប្រធានបទ:* {record.get('title')}\nវីដេអូត្រូវបានលុបចោល មិនត្រូវបានបង្ហោះឡើយ។"
+            telegram_service.send_message(bot_token, chat_id, reject_msg)
+            
+        return render_template_string("""
+        <!DOCTYPE html>
+        <html lang="km">
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>Video Rejected - AI Automation Pro</title>
+          <style>
+            body { background: #070d19; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
+            .card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 20px; padding: 35px 25px; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+            .icon { font-size: 3.5rem; margin-bottom: 15px; }
+            h2 { color: #f87171; margin: 0 0 10px 0; font-size: 1.45rem; }
+            p { color: #94a3b8; font-size: 0.92rem; line-height: 1.6; margin: 0 0 20px 0; }
+            .topic { background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; font-weight: 600; color: #cbd5e1; margin-bottom: 20px; word-break: break-word; }
+            .btn { display: inline-block; background: rgba(255,255,255,0.1); color: #cbd5e1; padding: 12px 28px; border-radius: 10px; text-decoration: none; font-weight: 600; font-size: 0.95rem; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <div class="icon">❌</div>
+            <h2>វីដេអូត្រូវបាន Reject (លុបចោល)</h2>
+            <div class="topic">{{ title }}</div>
+            <p>វីដេអូនេះនឹងមិនត្រូវបានបង្ហោះចូលទៅកាន់ Facebook Pages ឡើយ។</p>
+            <a href="/" class="btn">← ត្រឡប់ទៅកាន់ Dashboard</a>
+          </div>
+        </body>
+        </html>
+        """, title=record.get("title"))
+
+    return jsonify({"success": False, "error": "Unknown action"}), 400
 
 @app.route("/static/videos/<path:filename>")
 def serve_generated_video(filename):

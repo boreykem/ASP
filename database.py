@@ -23,6 +23,19 @@ def init_db():
             content TEXT
         )
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS video_approvals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            description TEXT,
+            video_url TEXT,
+            script_id INTEGER,
+            status TEXT DEFAULT 'PENDING',
+            created_at TEXT,
+            published_at TEXT,
+            results_json TEXT
+        )
+    ''')
     conn.commit()
     
     # Seed default sample scripts if database is empty
@@ -96,3 +109,49 @@ def delete_script(script_id):
     conn.commit()
     conn.close()
     return deleted
+
+def create_video_approval(title, description, video_url, script_id=None):
+    ensure_initialized()
+    conn = get_connection()
+    c = conn.cursor()
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    c.execute('''
+        INSERT INTO video_approvals (title, description, video_url, script_id, status, created_at)
+        VALUES (?, ?, ?, ?, 'PENDING', ?)
+    ''', (title, description, video_url, script_id, now_str))
+    conn.commit()
+    approval_id = c.lastrowid
+    conn.close()
+    return approval_id
+
+def get_video_approval(approval_id):
+    ensure_initialized()
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM video_approvals WHERE id = ?", (approval_id,))
+    row = c.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def update_video_approval_status(approval_id, status, results_json=None):
+    ensure_initialized()
+    conn = get_connection()
+    c = conn.cursor()
+    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    c.execute('''
+        UPDATE video_approvals
+        SET status = ?, published_at = ?, results_json = ?
+        WHERE id = ?
+    ''', (status, now_str, results_json, approval_id))
+    conn.commit()
+    conn.close()
+    return True
+
+def get_all_video_approvals(limit=50):
+    ensure_initialized()
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("SELECT * FROM video_approvals ORDER BY id DESC LIMIT ?", (limit,))
+    rows = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return rows

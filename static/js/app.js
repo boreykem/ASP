@@ -680,11 +680,17 @@ function setupEventListeners() {
   const btnPostFb = document.getElementById("btn-post-facebook");
   if (btnPostFb) btnPostFb.addEventListener("click", postSelectedScriptToFacebook);
   
-  const btnCreateVeo = document.getElementById("btn-create-veo-video");
-  if (btnCreateVeo) btnCreateVeo.addEventListener("click", createVeoVideoForSelectedScript);
-
   const btnCreateVid = document.getElementById("btn-create-video");
   if (btnCreateVid) btnCreateVid.addEventListener("click", createReelsVideoForSelectedScript);
+  
+  const btnSendApproval = document.getElementById("btn-send-approval");
+  if (btnSendApproval) btnSendApproval.addEventListener("click", handleSendCurrentScriptVideoForApproval);
+
+  const btnPrevSendApproval = document.getElementById("btn-preview-send-approval");
+  if (btnPrevSendApproval) btnPrevSendApproval.addEventListener("click", handleSendRenderedVideoForApproval);
+
+  const btnUrlSendApproval = document.getElementById("btn-url-send-approval");
+  if (btnUrlSendApproval) btnUrlSendApproval.addEventListener("click", handleSendCustomUrlForApproval);
   
   const btnBroadcastVid = document.getElementById("btn-broadcast-video-fb");
   if (btnBroadcastVid) btnBroadcastVid.addEventListener("click", broadcastRenderedVideoToFacebook);
@@ -1373,6 +1379,79 @@ async function broadcastCustomVideoUrl() {
   } finally {
     if (btn) btn.disabled = false;
   }
+}
+
+// ==========================================
+// Video Approval via Telegram
+// ==========================================
+async function sendVideoApprovalApi(title, desc, videoUrl, scriptId) {
+  try {
+    const res = await fetch("/api/video/send-for-approval", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: title,
+        description: desc,
+        video_url: videoUrl,
+        script_id: scriptId
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(currentLang === "km" ? "📲 " + data.message : "Sent to Telegram for approval!", "success");
+      return true;
+    } else {
+      showToast("Telegram: " + (data.error || "Failed"), "error");
+      return false;
+    }
+  } catch (err) {
+    showToast("Error: " + err.message, "error");
+    return false;
+  }
+}
+
+async function handleSendCurrentScriptVideoForApproval() {
+  const scriptContent = document.getElementById("preview-content")?.textContent || "";
+  const topicTitle = document.getElementById("preview-topic-title")?.textContent || "Reels Video";
+  const player = document.getElementById("rendered-video-player");
+  const customUrl = document.getElementById("custom-video-url-input")?.value.trim();
+  const videoUrl = player?.src || customUrl;
+  
+  if (!videoUrl) {
+    showToast(currentLang === "km" ? "សូមផលិតវីដេអូ ឬបញ្ចូល Link វីដេអូជាមុនសិន!" : "Please generate or input a video link first!", "error");
+    return;
+  }
+  
+  showToast(currentLang === "km" ? "📲 កំពុងផ្ញើទៅកាន់ Telegram..." : "Sending to Telegram...", "info");
+  await sendVideoApprovalApi(topicTitle, scriptContent, videoUrl, selectedScriptId);
+}
+
+async function handleSendRenderedVideoForApproval() {
+  const scriptContent = document.getElementById("preview-content")?.textContent || "";
+  const topicTitle = document.getElementById("preview-topic-title")?.textContent || "Reels Video";
+  const player = document.getElementById("rendered-video-player");
+  const videoUrl = player?.src;
+  
+  if (!videoUrl) {
+    showToast(currentLang === "km" ? "មិនទាន់មានវីដេអូដែលបាន Render ឡើយ!" : "No rendered video available!", "error");
+    return;
+  }
+  
+  showToast(currentLang === "km" ? "📲 កំពុងផ្ញើទៅកាន់ Telegram..." : "Sending to Telegram...", "info");
+  await sendVideoApprovalApi(topicTitle, scriptContent, videoUrl, selectedScriptId);
+}
+
+async function handleSendCustomUrlForApproval() {
+  const url = document.getElementById("custom-video-url-input")?.value.trim();
+  if (!url) {
+    showToast(currentLang === "km" ? "សូមបញ្ចូល Link វីដេអូជាមុនសិន!" : "Please enter a video URL first!", "error");
+    return;
+  }
+  const scriptContent = document.getElementById("preview-content")?.textContent || "";
+  const topicTitle = document.getElementById("preview-topic-title")?.textContent || "Reels Video";
+  
+  showToast(currentLang === "km" ? "📲 កំពុងផ្ញើ Link ទៅកាន់ Telegram..." : "Sending video link to Telegram...", "info");
+  await sendVideoApprovalApi(topicTitle, scriptContent, url, selectedScriptId);
 }
 
 async function verifyFacebookPage() {
