@@ -623,15 +623,12 @@ function setupTabs() {
   const navSettingsBtn = document.getElementById("nav-settings-btn");
   if (navSettingsBtn) {
     navSettingsBtn.addEventListener("click", () => {
-      switchTab("tab-settings");
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }
-
-  const btnJumpSettings = document.getElementById("btn-jump-settings");
-  if (btnJumpSettings) {
-    btnJumpSettings.addEventListener("click", () => {
-      switchTab("tab-settings");
+      const activePane = document.querySelector(".tab-pane.active");
+      if (activePane && activePane.id === "tab-settings") {
+        switchTab("tab-generator");
+      } else {
+        switchTab("tab-settings");
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   }
