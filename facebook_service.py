@@ -9,6 +9,7 @@ Meta Graph API Service for Facebook Page Automation
 import requests
 import json
 import time
+import os
 
 GRAPH_API_VERSION = "v19.0"
 GRAPH_API_BASE = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
@@ -145,6 +146,66 @@ def broadcast_to_pages(pages, message, delay=0.5):
         if idx < len(pages) - 1:
             time.sleep(delay)
             
-    summary = f"បានបង្ហោះជោគជ័យ {success_count}/{len(pages)} Facebook Pages!"
+def post_video_to_page(page_id, access_token, video_path, description=""):
+    """
+    បង្ហោះវីដេអូ (MP4) ចូលទៅកាន់ Facebook Page តាម Graph API
+    """
+    page_id = (page_id or "").strip()
+    access_token = (access_token or "").strip()
+    
+    if not page_id or not access_token:
+        return False, "មិនទាន់បានកំណត់ Facebook Page ID ឬ Access Token ឡើយ"
+        
+    if not os.path.exists(video_path):
+        return False, f"រកមិនឃើញ File វីដេអូ: {video_path}"
+        
+    url = f"{GRAPH_API_BASE}/{page_id}/videos"
+    payload = {
+        "description": description,
+        "access_token": access_token
+    }
+    
+    try:
+        with open(video_path, "rb") as video_file:
+            files = {"source": video_file}
+            res = requests.post(url, data=payload, files=files, timeout=120)
+            data = res.json()
+            
+            if res.status_code == 200 and "id" in data:
+                video_id = data.get("id")
+                return True, f"បានបង្ហោះវីដេអូលើ Facebook Page ជោគជ័យ (Video ID: {video_id})"
+                
+            error = data.get("error", {})
+            err_msg = error.get("message", f"HTTP {res.status_code}")
+            return False, f"បរាជ័យក្នុងការបង្ហោះវីដេអូ: {err_msg}"
+    except Exception as e:
+        return False, f"បញ្ហាបង្ហោះវីដេអូ: {str(e)}"
+
+def broadcast_video_to_pages(pages, video_path, description="", delay=1.0):
+    """
+    បង្ហោះវីដេអូទៅកាន់ Facebook Pages ច្រើនក្នុងពេលតែមួយ
+    """
+    if not pages or not isinstance(pages, list):
+        return False, "គ្មាន Facebook Pages ត្រូវបានជ្រើសរើសឡើយ", []
+        
+    results = []
+    success_count = 0
+    
+    for idx, p in enumerate(pages):
+        p_id = p.get("id")
+        p_name = p.get("name", p_id)
+        p_token = p.get("access_token")
+        
+        ok, msg = post_video_to_page(p_id, p_token, video_path, description)
+        if ok:
+            success_count += 1
+            results.append({"id": p_id, "name": p_name, "success": True, "message": msg})
+        else:
+            results.append({"id": p_id, "name": p_name, "success": False, "message": msg})
+            
+        if idx < len(pages) - 1:
+            time.sleep(delay)
+            
+    summary = f"បានបង្ហោះវីដេអូជោគជ័យ {success_count}/{len(pages)} Facebook Pages!"
     return (success_count > 0), summary, results
 

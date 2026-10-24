@@ -90,6 +90,9 @@ const translations = {
     btnCopy: "ចម្លងស្គ្រីប",
     btnResend: "ផ្ញើចូល Telegram",
     btnDelete: "លុប",
+    btnCreateVideo: "ផលិតវីដេអូ Reels AI",
+    btnBroadcastVideoFb: "បង្ហោះវីដេអូទៅកាន់ Facebook Pages ទាំងអស់",
+    btnDownloadVideo: "ទាញយក MP4",
     
     schedCardTitle: "ការកំណត់កាលវិភាគស្វ័យប្រវត្តប្រចាំថ្ងៃ",
     schedEnableTitle: "ដំណើរការស្វ័យប្រវត្តរាល់ថ្ងៃ (Daily Auto-Run)",
@@ -139,6 +142,9 @@ const translations = {
     lblFbPageToken: "Facebook Page Access Token:",
     btnVerifyFb: "Verify Facebook Page",
     btnPostFacebook: "Post to Facebook",
+    btnCreateVideo: "Create AI Reels Video",
+    btnBroadcastVideoFb: "Broadcast Video to All Facebook Pages",
+    btnDownloadVideo: "Download MP4",
     btnFetchFbPages: "Fetch My Pages",
     lblFbPageSelect: "Or Select a Single Page:",
     fbBroadcastAllTitle: "📢 Broadcast to All Pages",
@@ -506,6 +512,9 @@ function applyLanguage(lang) {
   setTxt("btn-fetch-fb-pages-text", t.btnFetchFbPages);
   setTxt("btn-verify-fb-text", t.btnVerifyFb);
   setTxt("btn-post-facebook-text", t.btnPostFacebook);
+  setTxt("btn-create-video-text", t.btnCreateVideo);
+  setTxt("btn-broadcast-video-fb-text", t.btnBroadcastVideoFb);
+  setTxt("btn-download-video-text", t.btnDownloadVideo);
   
   // Generator Tab
   document.getElementById("format-title").textContent = t.formatTitle;
@@ -670,6 +679,12 @@ function setupEventListeners() {
   
   const btnPostFb = document.getElementById("btn-post-facebook");
   if (btnPostFb) btnPostFb.addEventListener("click", postSelectedScriptToFacebook);
+  
+  const btnCreateVid = document.getElementById("btn-create-video");
+  if (btnCreateVid) btnCreateVid.addEventListener("click", createReelsVideoForSelectedScript);
+  
+  const btnBroadcastVid = document.getElementById("btn-broadcast-video-fb");
+  if (btnBroadcastVid) btnBroadcastVid.addEventListener("click", broadcastRenderedVideoToFacebook);
   
   const btnVerifyFb = document.getElementById("btn-verify-fb");
   if (btnVerifyFb) btnVerifyFb.addEventListener("click", verifyFacebookPage);
@@ -1105,6 +1120,97 @@ async function postSelectedScriptToFacebook() {
     const data = await res.json();
     if (data.success) {
       showToast(translations[currentLang].msgFbPosted, "success");
+    } else {
+      showToast("Facebook: " + (data.error || data.message), "error");
+    }
+  } catch (err) {
+    showToast("Network error: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+let currentRenderedVideoFilename = null;
+
+async function createReelsVideoForSelectedScript() {
+  if (!selectedScriptId) {
+    showToast(currentLang === "km" ? "សូមជ្រើសរើសស្គ្រីបមួយជាមុនសិន!" : "Please select a script first!", "error");
+    return;
+  }
+  const btn = document.getElementById("btn-create-video");
+  const previewBox = document.getElementById("video-preview-box");
+  const player = document.getElementById("rendered-video-player");
+  const statusEl = document.getElementById("video-info-status");
+  const downloadBtn = document.getElementById("btn-download-video");
+  
+  if (btn) btn.disabled = true;
+  showToast(currentLang === "km" ? "🎬 កំពុងផលិតវីដេអូ Reels (សំឡេងខ្មែរ Neural + B-Roll)..." : "Generating Reels video...", "info");
+  if (statusEl) {
+    statusEl.textContent = currentLang === "km" ? "⏳ កំពុងផលិតវីដេអូ Reels (សំឡេងខ្មែរ Neural + ប្លង់ B-Roll 9:16)..." : "Rendering video...";
+    statusEl.style.color = "#f59e0b";
+  }
+  
+  try {
+    const res = await fetch("/api/video/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        script_id: selectedScriptId,
+        b_roll: "coconut",
+        voice: "km-KH-PisethNeural"
+      })
+    });
+    const data = await res.json();
+    if (data.success && data.video_url) {
+      currentRenderedVideoFilename = data.filename;
+      player.src = data.video_url + "?t=" + Date.now();
+      downloadBtn.href = data.video_url;
+      previewBox.classList.remove("hidden");
+      if (statusEl) {
+        statusEl.innerHTML = `✅ <strong>វីដេអូ Reels ផលិតជោគជ័យ!</strong><br>គុណភាព: 1080x1920 (9:16) ជាមួយសំឡេងខ្មែរ Neural Voice និងប្លង់ B-Roll។`;
+        statusEl.style.color = "#34d399";
+      }
+      showToast(currentLang === "km" ? "🎬 វីដេអូ Reels ផលិតជោគជ័យ!" : "Reels video generated successfully!", "success");
+      previewBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    } else {
+      showToast("កំហុសផលិតវីដេអូ: " + (data.error || "Unknown"), "error");
+      if (statusEl) {
+        statusEl.textContent = "❌ " + (data.error || "Failed");
+        statusEl.style.color = "#ef4444";
+      }
+    }
+  } catch (err) {
+    showToast("Error: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function broadcastRenderedVideoToFacebook() {
+  if (!currentRenderedVideoFilename) {
+    showToast(currentLang === "km" ? "មិនទាន់មាន File វីដេអូដែលបានផលិតឡើយ!" : "No generated video available!", "error");
+    return;
+  }
+  const btn = document.getElementById("btn-broadcast-video-fb");
+  if (btn) btn.disabled = true;
+  showToast(currentLang === "km" ? "🚀 កំពុងបង្ហោះវីដេអូទៅកាន់ Facebook Pages ទាំងអស់..." : "Broadcasting video to Facebook Pages...", "info");
+  
+  const scriptContent = document.getElementById("preview-content")?.textContent || "";
+  const topicTitle = document.getElementById("preview-topic-title")?.textContent || "Reels Video";
+  const desc = `🎬 ${topicTitle}\n\n${scriptContent}`;
+  
+  try {
+    const res = await fetch("/api/video/broadcast-facebook", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        filename: currentRenderedVideoFilename,
+        description: desc
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(currentLang === "km" ? "🎉 " + data.message : "Video broadcasted successfully!", "success");
     } else {
       showToast("Facebook: " + (data.error || data.message), "error");
     }

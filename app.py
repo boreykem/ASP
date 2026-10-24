@@ -409,7 +409,70 @@ def api_update_scheduler():
         sched["auto_diverse_topics"] = bool(data["auto_diverse_topics"])
     cfg["scheduler"] = sched
     save_config(cfg)
-    return jsonify({"success": True, "scheduler": sched})
+@app.route("/api/video/generate", methods=["POST"])
+def api_generate_video():
+    import video_engine
+    data = request.json or {}
+    script_id = data.get("script_id")
+    script_text = data.get("script_text")
+    voice = data.get("voice", "km-KH-PisethNeural")
+    b_roll = data.get("b_roll", "coconut")
+    
+    if script_id:
+        s = database.get_script_by_id(script_id)
+        if s:
+            script_text = s.get("content", "")
+            
+    if not script_text:
+        return jsonify({"success": False, "error": "អត្ថបទ Script មិនអាចទទេបានឡើយ"}), 400
+        
+    try:
+        vid_path = video_engine.create_reels_video(
+            script_text=script_text,
+            voice=voice,
+            b_roll_folder=b_roll
+        )
+        filename = os.path.basename(vid_path)
+        video_url = f"/static/videos/{filename}"
+        return jsonify({
+            "success": True,
+            "message": "បានផលិតវីដេអូ Reels ជោគជ័យ!",
+            "video_url": video_url,
+            "filename": filename
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/video/broadcast-facebook", methods=["POST"])
+def api_broadcast_video_facebook():
+    data = request.json or {}
+    filename = data.get("filename")
+    description = data.get("description", "")
+    
+    if not filename:
+        return jsonify({"success": False, "error": "មិនបានបញ្ជាក់ File វីដេអូឡើយ"}), 400
+        
+    video_path = os.path.join(BASE_DIR, "static", "videos", filename)
+    if not os.path.exists(video_path):
+        return jsonify({"success": False, "error": f"រកមិនឃើញ File វីដេអូ: {filename}"}), 404
+        
+    cfg = load_config()
+    pages_to_post = cfg.get("facebook_selected_pages") or []
+    page_id = cfg.get("facebook_page_id")
+    access_token = cfg.get("facebook_access_token")
+    
+    if not pages_to_post and page_id and access_token:
+        pages_to_post = [{"id": page_id, "name": "Primary Page", "access_token": access_token}]
+        
+    if not pages_to_post:
+        return jsonify({"success": False, "error": "Facebook Pages are not configured in Settings"}), 400
+        
+    if len(pages_to_post) == 1:
+        ok, msg = facebook_service.post_video_to_page(pages_to_post[0]["id"], pages_to_post[0]["access_token"], video_path, description)
+        return jsonify({"success": ok, "message": msg})
+    else:
+        ok, summary, results = facebook_service.broadcast_video_to_pages(pages_to_post, video_path, description)
+        return jsonify({"success": ok, "message": summary, "results": results})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)

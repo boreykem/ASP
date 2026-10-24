@@ -306,6 +306,9 @@
                 <button id="btn-resend-script" class="btn btn-primary btn-sm">
                   📤 <span id="btn-resend-text">ផ្ញើចូល Telegram</span>
                 </button>
+                <button id="btn-create-video" class="btn btn-accent btn-sm" title="ផលិតវីដេអូ Reels (9:16) ដោយស្វ័យប្រវត្តិ">
+                  🎬 <span id="btn-create-video-text">ផលិតវីដេអូ Reels AI</span>
+                </button>
                 <button id="btn-post-facebook" class="btn btn-secondary btn-sm" title="Post ឡើង Facebook Page">
                   📘 <span id="btn-post-facebook-text">Post Facebook</span>
                 </button>
@@ -315,6 +318,25 @@
               </div>
             </div>
             <pre id="preview-content" class="script-content-pre"></pre>
+
+            <!-- Video Generation & Player Container -->
+            <div id="video-preview-box" class="video-preview-box hidden" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+              <h4 style="margin-bottom: 10px; color: var(--accent);">🎬 វីដេអូ Reels ដែលបានផលិតរួចរាល់ (Preview 9:16 HD)</h4>
+              <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                <video id="rendered-video-player" controls style="max-width: 240px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"></video>
+                <div style="flex: 1; min-width: 250px;">
+                  <p id="video-info-status" style="font-size: 0.9rem; margin-bottom: 10px; color: #a0aec0;">វីដេអូបញ្ឈរគុណភាព HD 1080x1920 ជាមួយសំឡេងខ្មែរ Neural Voice និងប្លង់ B-Roll រួចរាល់សម្រាប់ផ្សព្វផ្សាយ។</p>
+                  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                    <button id="btn-broadcast-video-fb" class="btn btn-primary btn-sm">
+                      🚀 <span id="btn-broadcast-video-fb-text">បង្ហោះវីដេអូទៅកាន់ Facebook Pages ទាំងអស់</span>
+                    </button>
+                    <a id="btn-download-video" class="btn btn-secondary btn-sm" download target="_blank">
+                      ⬇️ <span id="btn-download-video-text">ទាញយក MP4</span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
         </div>
