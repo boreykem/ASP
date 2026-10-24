@@ -102,7 +102,7 @@ def get_user_pages(access_token):
     try:
         res = requests.get(url, params=params, timeout=20)
         data = res.json()
-        if res.status_code == 200 and "data" in data:
+        if res.status_code == 200 and "data" in data and len(data["data"]) > 0:
             raw_pages = data["data"]
             pages = []
             for p in raw_pages:
@@ -114,6 +114,19 @@ def get_user_pages(access_token):
                     "tasks": p.get("tasks", [])
                 })
             return True, f"បានរកឃើញ {len(pages)} Facebook Pages!", pages
+            
+        # ប្រសិនបើ token នេះជា Direct Page Access Token (ដែលគ្មាន /me/accounts edge)
+        me_res = requests.get(f"{GRAPH_API_BASE}/me", params={"access_token": access_token}, timeout=15)
+        me_data = me_res.json()
+        if me_res.status_code == 200 and "id" in me_data and "name" in me_data:
+            pages = [{
+                "id": me_data["id"],
+                "name": me_data["name"],
+                "category": "Facebook Page",
+                "access_token": access_token,
+                "tasks": ["CREATE_CONTENT", "MANAGE"]
+            }]
+            return True, f"ភ្ជាប់ទៅកាន់ Page '{me_data['name']}' (ID: {me_data['id']}) ជោគជ័យ!", pages
             
         err = data.get("error", {})
         return False, err.get("message", f"HTTP {res.status_code}"), []
