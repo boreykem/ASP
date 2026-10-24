@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import threading
 import time
 import datetime
@@ -452,7 +452,11 @@ def api_broadcast_video_facebook():
     if not filename:
         return jsonify({"success": False, "error": "មិនបានបញ្ជាក់ File វីដេអូឡើយ"}), 400
         
-    video_path = os.path.join(BASE_DIR, "static", "videos", filename)
+    if os.environ.get("VERCEL"):
+        video_dir = "/tmp/videos"
+    else:
+        video_dir = os.path.join(BASE_DIR, "static", "videos")
+    video_path = os.path.join(video_dir, filename)
     if not os.path.exists(video_path):
         return jsonify({"success": False, "error": f"រកមិនឃើញ File វីដេអូ: {filename}"}), 404
         
@@ -473,6 +477,14 @@ def api_broadcast_video_facebook():
     else:
         ok, summary, results = facebook_service.broadcast_video_to_pages(pages_to_post, video_path, description)
         return jsonify({"success": ok, "message": summary, "results": results})
+
+@app.route("/static/videos/<path:filename>")
+def serve_generated_video(filename):
+    if os.environ.get("VERCEL"):
+        vdir = "/tmp/videos"
+    else:
+        vdir = os.path.join(BASE_DIR, "static", "videos")
+    return send_from_directory(vdir, filename)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=False)
