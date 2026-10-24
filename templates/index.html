@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261024_08">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261024_09">
 </head>
 <body>
 
@@ -475,20 +475,20 @@
             </label>
           </div>
 
-          <!-- Facebook User Access Token (Optional) -->
-          <div class="form-group" style="background: rgba(59, 130, 246, 0.05); padding: 0.75rem 0.85rem; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2); margin-top: 0.5rem;">
+          <!-- Facebook User Access Token (Master Token - 2 Months) -->
+          <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 0.75rem 0.85rem; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.25); margin-top: 0.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
               <label for="fb-user-token" id="lbl-fb-user-token" style="margin-bottom: 0; font-weight: 600; color: #93c5fd;">
-                🔑 Facebook User Access Token (Optional - គ្រប់គ្រង Pages ទាំងអស់):
+                🔑 Facebook User Access Token (Master Token - 2 Months):
               </label>
-              <span class="badge" style="background: rgba(59, 130, 246, 0.25); color: #bfdbfe; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">Optional</span>
+              <span class="badge" style="background: rgba(16, 185, 129, 0.25); color: #a7f3d0; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">Active (60 Days)</span>
             </div>
             <div class="input-with-button">
-              <input type="password" id="fb-user-token" class="form-control" placeholder="EAA... ឬ User Access Token (សម្រាប់ទាញយក Pages ទាំងអស់)">
+              <input type="password" id="fb-user-token" class="form-control" placeholder="EAA... ឬ User Access Token (Master Token ២ ខែ)">
               <button type="button" class="eye-btn" data-target="fb-user-token" title="Toggle Visibility">👁</button>
             </div>
             <p class="text-muted" id="desc-fb-user-token" style="font-size: 0.78rem; margin: 0.35rem 0 0 0;">
-              💡 ប្រើសម្រាប់ទាញយក Facebook Pages ទាំងអស់ដែលអ្នកគ្រប់គ្រង (23 Pages) និងបង្កើត Page Tokens ដោយស្វ័យប្រវត្តិ។
+              💡 Master Token មានសុពលភាព ២ ខែ (60 ថ្ងៃ) សម្រាប់គ្រប់គ្រង និងបង្ហោះទៅកាន់ Facebook Pages ទាំង ២៣ ដោយស្វ័យប្រវត្តិ។
             </p>
           </div>
 
@@ -504,31 +504,20 @@
               <option value="">-- កំពុងផ្ទុកបញ្ជី Pages ទាំង ២៣... --</option>
             </select>
             <p class="text-muted" style="font-size: 0.78rem; margin: 0.35rem 0 0 0;">
-              💡 ជ្រើសរើស Page ណាមួយ នោះ Page ID និង Token នឹងត្រូវបានបំពេញដោយស្វ័យប្រវត្តិតែម្តង។
+              💡 ជ្រើសរើស Page ណាមួយ នោះ Page ID នឹងត្រូវបានបំពេញដោយស្វ័យប្រវត្តិតែម្តង។
             </p>
           </div>
 
-          <!-- Facebook Page Access Token -->
+          <!-- Hidden Page Access Token for JavaScript Backend Compatibility -->
+          <input type="hidden" id="fb-page-token">
+
+          <!-- Facebook Page ID (Read-only / Auto-filled) -->
           <div class="form-group" style="margin-top: 0.65rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-              <label for="fb-page-token" id="lbl-fb-page-token" style="margin-bottom: 0; font-weight: 600;">
-                📘 Facebook Page Access Token (Page Token ជាក់លាក់):
-              </label>
-              <span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #6ee7b7; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">Active</span>
-            </div>
-            <div class="input-with-button">
-              <input type="password" id="fb-page-token" class="form-control" placeholder="EAA... ឬ Page Access Token របស់អ្នក">
-              <button type="button" class="eye-btn" data-target="fb-page-token" title="Toggle Visibility">👁</button>
-            </div>
-            <p class="text-muted" id="desc-fb-page-token" style="font-size: 0.78rem; margin: 0.35rem 0 0 0;">
-              ប្រើជា Token សម្រាប់បង្ហោះលើ Page នេះ។ អ្នកអាចកែប្រែ ឬ Save Token ថ្មីបានគ្រប់ពេល។
+            <label for="fb-page-id" id="lbl-fb-page-id">Facebook Page ID (Selected Page):</label>
+            <input type="text" id="fb-page-id" class="form-control" readonly style="background: rgba(15, 23, 42, 0.6); color: #6ee7b7; font-family: monospace; font-weight: 600;" placeholder="ឧទាហរណ៍៖ 1000983149762365">
+            <p class="text-muted" style="font-size: 0.78rem; margin: 0.35rem 0 0 0;">
+              💡 បង្ហាញលេខសម្គាល់ (Page ID) របស់ Page ដែលបានជ្រើសរើសពីបញ្ជីខាងលើដោយស្វ័យប្រវត្តិ។
             </p>
-          </div>
-
-          <!-- Facebook Page ID -->
-          <div class="form-group">
-            <label for="fb-page-id" id="lbl-fb-page-id">Facebook Page ID:</label>
-            <input type="text" id="fb-page-id" class="form-control" placeholder="ឧទាហរណ៍៖ 1000983149762365">
           </div>
 
           <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin: 0.35rem 0;">
@@ -547,8 +536,8 @@
               <span>💡</span> <span>របៀបបង្ហោះចូលគ្រប់ Facebook Pages ទាំង ២៣ (All Pages Broadcast Guide)៖</span>
             </div>
             <p style="margin: 0 0 0.4rem 0; color: #cbd5e1; font-size: 0.82rem;">
-              • <strong>Page Access Token (បច្ចុប្បន្ន)៖</strong> ប្រើបានសម្រាប់តែ ១ Page គត់ (ចំការដូងក្រអូប)។<br>
-              • <strong>User Access Token (Admin Master Token)៖</strong> អនុញ្ញាតឱ្យទាញយក និង Post លើគ្រប់ Pages ទាំងអស់ក្នុងពេលតែមួយ។
+              • <strong>User Access Token (Master Token 2 Months)៖</strong> ប្រើប្រាស់សម្រាប់គ្រប់គ្រង និងបង្ហោះចូល Facebook Pages ទាំង ២៣ ដោយស្វ័យប្រវត្តិ (មានសុពលភាព ២ ខែ / 60 ថ្ងៃ)។<br>
+              • <strong>Page Tokens៖</strong> ប្រព័ន្ធទាញយក និងផ្គួបដោយស្វ័យប្រវត្តិពី Master Token មិនបាច់បញ្ចូលដោយដៃឡើយ។
             </p>
             <details style="cursor: pointer; color: #93c5fd; font-size: 0.82rem;">
               <summary style="font-weight: 500;">📖 មើលរបៀបយក User Token ពី Graph API Explorer (៣ ជំហានងាយៗ)</summary>
@@ -610,6 +599,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- JavaScript -->
-  <script src="/static/js/app.js?v=20261024_08"></script>
+  <script src="/static/js/app.js?v=20261024_09"></script>
 </body>
 </html>

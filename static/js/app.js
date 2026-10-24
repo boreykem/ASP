@@ -34,11 +34,9 @@ const translations = {
     fbSettingsDesc: "បង្ហោះស្គ្រីប និងអត្ថបទទៅកាន់ Facebook Page របស់អ្នកដោយស្វ័យប្រវត្តិ។",
     fbAutoTitle: "Auto-Post ឡើង Facebook Page",
     fbAutoDesc: "ពេលបង្កើតស្គ្រីបរួច នឹង Post ឡើង Page ភ្លាមៗដោយស្វ័យប្រវត្ត។",
-    lblFbPageId: "Facebook Page ID:",
-    lblFbUserToken: "🔑 Facebook User Access Token (Optional - គ្រប់គ្រង Pages ទាំងអស់):",
-    descFbUserToken: "💡 ប្រើសម្រាប់ទាញយក Facebook Pages ទាំងអស់ដែលអ្នកគ្រប់គ្រង (23 Pages) និងបង្កើត Page Tokens ដោយស្វ័យប្រវត្តិ។",
-    lblFbPageToken: "📘 Facebook Page Access Token (Page Token ជាក់លាក់):",
-    descFbPageToken: "ប្រើជា Default Token សម្រាប់បង្ហោះលើ Page ជាក់លាក់ (ឧ. ចំការដូងក្រអូប អេស៊ីហ្វាម)។",
+    lblFbPageId: "Facebook Page ID (Selected Page):",
+    lblFbUserToken: "🔑 Facebook User Access Token (Master Token - 2 Months):",
+    descFbUserToken: "💡 Master Token មានសុពលភាព ២ ខែ (60 ថ្ងៃ) សម្រាប់គ្រប់គ្រង និងបង្ហោះទៅកាន់ Facebook Pages ទាំង ២៣ ដោយស្វ័យប្រវត្តិ។",
     btnVerifyFb: "ផ្ទៀងផ្ទាត់ Facebook Page",
     btnPostFacebook: "Post Facebook",
     btnFetchFbPages: "ទាញយក Pages របស់ខ្ញុំ",
@@ -141,11 +139,9 @@ const translations = {
     fbSettingsDesc: "Automatically publish scripts and posts directly to your Facebook Page.",
     fbAutoTitle: "Auto-Post to Facebook Page",
     fbAutoDesc: "Automatically publish generated scripts to your Page upon generation.",
-    lblFbPageId: "Facebook Page ID:",
-    lblFbUserToken: "🔑 Facebook User Access Token (Optional - Manage All Pages):",
-    descFbUserToken: "💡 Used to fetch all managed Facebook Pages (23 Pages) and generate Page Tokens automatically.",
-    lblFbPageToken: "📘 Facebook Page Access Token (Specific Page Token):",
-    descFbPageToken: "Used as the default token to post to a specific Page (e.g. ចំការដូងក្រអូប អេស៊ីហ្វាម).",
+    lblFbPageId: "Facebook Page ID (Selected Page):",
+    lblFbUserToken: "🔑 Facebook User Access Token (Master Token - 2 Months):",
+    descFbUserToken: "💡 Master Token valid for 2 months (60 days) to auto-manage and broadcast to all 23 Facebook Pages.",
     btnVerifyFb: "Verify Facebook Page",
     btnPostFacebook: "Post to Facebook",
     btnCreateVideo: "Create AI Reels Video",
@@ -510,8 +506,6 @@ function applyLanguage(lang) {
   setTxt("lbl-fb-page-id", t.lblFbPageId);
   setTxt("lbl-fb-user-token", t.lblFbUserToken);
   setTxt("desc-fb-user-token", t.descFbUserToken);
-  setTxt("lbl-fb-page-token", t.lblFbPageToken);
-  setTxt("desc-fb-page-token", t.descFbPageToken);
   setTxt("lbl-fb-page-select", t.lblFbPageSelect);
   setTxt("fb-broadcast-all-title", t.fbBroadcastAllTitle);
   setTxt("fb-broadcast-all-desc", t.fbBroadcastAllDesc);
