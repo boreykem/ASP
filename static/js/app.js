@@ -984,6 +984,9 @@ async function loadHistory() {
     if (data.success && data.scripts) {
       historyCache = data.scripts;
       renderHistoryTable(historyCache);
+      if (historyCache.length > 0 && !selectedScriptId) {
+        viewScriptDetail(historyCache[0].id);
+      }
     }
   } catch (err) {
     tbody.innerHTML = `<tr><td colspan="4" class="text-center" style="color: #ef4444;">Error loading history</td></tr>`;
