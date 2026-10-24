@@ -33,15 +33,15 @@ try:
 except Exception:
     DEFAULT_FB_TOKEN = ""
 
-from default_pages import DEFAULT_FACEBOOK_PAGES, DEFAULT_COCONUT_TOKEN
+from default_pages import DEFAULT_FACEBOOK_PAGES, DEFAULT_COCONUT_TOKEN, DEFAULT_USER_TOKEN
 
 DEFAULT_CONFIG = {
     "gemini_key": "",
     "bot_token": "",
     "chat_id": "",
     "facebook_page_id": "1000983149762365",
-    "facebook_access_token": DEFAULT_FB_TOKEN or DEFAULT_COCONUT_TOKEN,
-    "facebook_user_access_token": "",
+    "facebook_access_token": DEFAULT_COCONUT_TOKEN,
+    "facebook_user_access_token": DEFAULT_USER_TOKEN,
     "facebook_auto_post": True,
     "facebook_all_pages": True,
     "facebook_selected_pages": DEFAULT_FACEBOOK_PAGES,
@@ -506,11 +506,17 @@ def api_broadcast_video_facebook():
     if not pages_to_post:
         return jsonify({"success": False, "error": "Facebook Pages are not configured in Settings"}), 400
         
+    # On Vercel cloud hosting, utilize high-speed URL Pull
+    if os.environ.get("VERCEL"):
+        video_target = f"https://asp-ac.vercel.app/static/videos/{filename}"
+    else:
+        video_target = video_path
+        
     if len(pages_to_post) == 1:
-        ok, msg = facebook_service.post_video_to_page(pages_to_post[0]["id"], pages_to_post[0]["access_token"], video_path, description)
+        ok, msg = facebook_service.post_video_to_page(pages_to_post[0]["id"], pages_to_post[0]["access_token"], video_target, description)
         return jsonify({"success": ok, "message": msg})
     else:
-        ok, summary, results = facebook_service.broadcast_video_to_pages(pages_to_post, video_path, description)
+        ok, summary, results = facebook_service.broadcast_video_to_pages(pages_to_post, video_target, description)
         return jsonify({"success": ok, "message": summary, "results": results})
 
 @app.route("/static/videos/<path:filename>")

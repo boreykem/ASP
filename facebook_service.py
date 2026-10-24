@@ -159,18 +159,20 @@ def broadcast_to_pages(pages, message, delay=0.5):
         if idx < len(pages) - 1:
             time.sleep(delay)
             
-def post_video_to_page(page_id, access_token, video_path, description=""):
+def post_video_to_page(page_id, access_token, video_path_or_url, description=""):
     """
     បង្ហោះវីដេអូ (MP4) ចូលទៅកាន់ Facebook Page តាម Graph API
+    គាំទ្រទាំង URL Pull (file_url) និង Local Multipart File Upload
     """
     page_id = (page_id or "").strip()
     access_token = (access_token or "").strip()
+    video_source = (video_path_or_url or "").strip()
     
     if not page_id or not access_token:
         return False, "មិនទាន់បានកំណត់ Facebook Page ID ឬ Access Token ឡើយ"
         
-    if not os.path.exists(video_path):
-        return False, f"រកមិនឃើញ File វីដេអូ: {video_path}"
+    if not video_source:
+        return False, "មិនបានបញ្ជាក់ File ឬ URL វីដេអូឡើយ"
         
     url = f"{GRAPH_API_BASE}/{page_id}/videos"
     payload = {
@@ -179,18 +181,25 @@ def post_video_to_page(page_id, access_token, video_path, description=""):
     }
     
     try:
-        with open(video_path, "rb") as video_file:
-            files = {"source": video_file}
-            res = requests.post(url, data=payload, files=files, timeout=120)
-            data = res.json()
-            
-            if res.status_code == 200 and "id" in data:
-                video_id = data.get("id")
-                return True, f"បានបង្ហោះវីដេអូលើ Facebook Page ជោគជ័យ (Video ID: {video_id})"
+        # Check if video_source is a public URL (URL Pull method)
+        if video_source.startswith("http://") or video_source.startswith("https://"):
+            payload["file_url"] = video_source
+            res = requests.post(url, data=payload, timeout=45)
+        else:
+            if not os.path.exists(video_source):
+                return False, f"រកមិនឃើញ File វីដេអូ: {video_source}"
+            with open(video_source, "rb") as video_file:
+                files = {"source": video_file}
+                res = requests.post(url, data=payload, files=files, timeout=120)
                 
-            error = data.get("error", {})
-            err_msg = error.get("message", f"HTTP {res.status_code}")
-            return False, f"បរាជ័យក្នុងការបង្ហោះវីដេអូ: {err_msg}"
+        data = res.json()
+        if res.status_code == 200 and "id" in data:
+            video_id = data.get("id")
+            return True, f"បានបង្ហោះវីដេអូលើ Facebook Page ជោគជ័យ (Video ID: {video_id})"
+            
+        error = data.get("error", {})
+        err_msg = error.get("message", f"HTTP {res.status_code}")
+        return False, f"បរាជ័យក្នុងការបង្ហោះវីដេអូ: {err_msg}"
     except Exception as e:
         return False, f"បញ្ហាបង្ហោះវីដេអូ: {str(e)}"
 
