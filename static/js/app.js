@@ -761,7 +761,7 @@ async function loadInitialConfig() {
         fbPagesCache = c.facebook_selected_pages;
         renderPagesChecklist(fbPagesCache);
       } else if (c.facebook_access_token) {
-        fetchFacebookPages();
+        fetchFacebookPages(true);
       }
       
       if (c.format) {
@@ -1318,14 +1318,14 @@ function getSelectedFacebookPages() {
   return selected;
 }
 
-async function fetchFacebookPages() {
+async function fetchFacebookPages(silent = false) {
   const token = document.getElementById("fb-page-token")?.value.trim();
   const btn = document.getElementById("btn-fetch-fb-pages");
   const statusEl = document.getElementById("fb-verify-status");
   const selectEl = document.getElementById("fb-page-select");
   
   if (!token) {
-    showToast(currentLang === "km" ? "សូមបញ្ចូល Facebook Access Token ជាមុនសិន!" : "Please enter your Facebook Access Token first!", "error");
+    if (!silent) showToast(currentLang === "km" ? "សូមបញ្ចូល Facebook Access Token ជាមុនសិន!" : "Please enter your Facebook Access Token first!", "error");
     return;
   }
   
@@ -1357,13 +1357,18 @@ async function fetchFacebookPages() {
         statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានរកឃើញ ' + data.pages.length + ' Pages' : 'Found ' + data.pages.length + ' Pages'}`;
         statusEl.style.color = "#34d399";
       }
-      showToast(translations[currentLang].msgPagesLoaded, "success");
+      if (!silent) showToast(translations[currentLang].msgPagesLoaded, "success");
     } else {
+      const isExpired = (data.message || "").toLowerCase().includes("expired");
       if (statusEl) {
-        statusEl.textContent = "❌ " + (data.message || "No pages found");
-        statusEl.style.color = "#ef4444";
+        statusEl.textContent = isExpired 
+          ? (currentLang === "km" ? "⚠️ Facebook Token បានផុតកំណត់ (Expired) - សូមបង្កើត Token ថ្មីក្នុង Graph API Explorer" : "⚠️ Facebook Token expired - please generate a new token")
+          : "❌ " + (data.message || "No pages found");
+        statusEl.style.color = isExpired ? "#f59e0b" : "#ef4444";
       }
-      showToast(data.message || "Failed to load pages", "error");
+      if (!silent) {
+        showToast(isExpired ? (currentLang === "km" ? "Facebook Token បានផុតកំណត់ សូមបង្កើត Token ថ្មី" : "Facebook Token expired") : (data.message || "Failed to load pages"), "error");
+      }
     }
   } catch (err) {
     if (statusEl) {
