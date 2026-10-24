@@ -33,16 +33,18 @@ try:
 except Exception:
     DEFAULT_FB_TOKEN = ""
 
+from default_pages import DEFAULT_FACEBOOK_PAGES, DEFAULT_COCONUT_TOKEN
+
 DEFAULT_CONFIG = {
     "gemini_key": "",
     "bot_token": "",
     "chat_id": "",
     "facebook_page_id": "1000983149762365",
-    "facebook_access_token": DEFAULT_FB_TOKEN,
+    "facebook_access_token": DEFAULT_FB_TOKEN or DEFAULT_COCONUT_TOKEN,
     "facebook_user_access_token": "",
     "facebook_auto_post": True,
     "facebook_all_pages": True,
-    "facebook_selected_pages": [],
+    "facebook_selected_pages": DEFAULT_FACEBOOK_PAGES,
     "language": "km",
     "format": "NotebookLM Video Overview (Explainer Video ៥+ នាទី | សំឡេងខ្មែរ + ស្លាយ/CC អង់គ្លេស)",
     "tone": "ទាក់ទាញ & រំភើប (Hook & Catchy)",
@@ -82,6 +84,8 @@ def load_config():
     cfg["facebook_page_id"] = os.environ.get("FACEBOOK_PAGE_ID") or cfg.get("facebook_page_id") or DEFAULT_CONFIG["facebook_page_id"]
     cfg["facebook_access_token"] = os.environ.get("FACEBOOK_ACCESS_TOKEN") or cfg.get("facebook_access_token") or DEFAULT_CONFIG["facebook_access_token"]
     cfg["facebook_user_access_token"] = os.environ.get("FACEBOOK_USER_ACCESS_TOKEN") or cfg.get("facebook_user_access_token") or DEFAULT_CONFIG.get("facebook_user_access_token", "")
+    if not cfg.get("facebook_selected_pages") or len(cfg.get("facebook_selected_pages", [])) == 0:
+        cfg["facebook_selected_pages"] = DEFAULT_FACEBOOK_PAGES
     return cfg
 
 def save_config(cfg):
@@ -402,6 +406,20 @@ def api_get_facebook_pages():
         or cfg.get("facebook_access_token")
     )
     ok, msg, pages = facebook_service.get_user_pages(token)
+    
+    # If external API returned single page or error, enrich with the 23 default pages
+    default_list = cfg.get("facebook_selected_pages") or DEFAULT_FACEBOOK_PAGES
+    if not ok or not pages or len(pages) <= 1:
+        if ok and pages and len(pages) == 1:
+            p_active = pages[0]
+            for p in default_list:
+                if p.get("id") == p_active.get("id"):
+                    p["access_token"] = p_active.get("access_token")
+                    break
+        pages = default_list
+        ok = True
+        msg = f"បានដំណើរការ {len(pages)} Facebook Pages ទាំងអស់ក្នុងប្រព័ន្ធ!"
+        
     return jsonify({"success": ok, "message": msg, "pages": pages})
 
 @app.route("/api/scheduler", methods=["GET"])

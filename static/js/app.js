@@ -704,6 +704,17 @@ function setupEventListeners() {
   const fbSelect = document.getElementById("fb-page-select");
   if (fbSelect) fbSelect.addEventListener("change", handleFacebookPageSelect);
   
+  const fbTokenInput = document.getElementById("fb-page-token");
+  if (fbTokenInput) {
+    fbTokenInput.addEventListener("input", (e) => {
+      const curId = document.getElementById("fb-page-select")?.value;
+      if (curId && fbPagesCache) {
+        const p = fbPagesCache.find(item => String(item.id) === String(curId));
+        if (p) p.access_token = e.target.value.trim();
+      }
+    });
+  }
+  
   document.getElementById("btn-select-all-pages")?.addEventListener("click", () => {
     document.querySelectorAll(".fb-page-cb").forEach(cb => cb.checked = true);
   });
@@ -771,6 +782,17 @@ async function loadInitialConfig() {
       if (c.facebook_selected_pages && c.facebook_selected_pages.length > 0) {
         fbPagesCache = c.facebook_selected_pages;
         renderPagesChecklist(fbPagesCache);
+        const activePageId = c.facebook_page_id || fbPagesCache[0].id;
+        populatePageDropdown(fbPagesCache, activePageId);
+        
+        // Auto-sync page id & token if empty
+        const curPage = fbPagesCache.find(p => String(p.id) === String(activePageId));
+        if (curPage) {
+          if (fbPageId && !fbPageId.value) fbPageId.value = curPage.id;
+          if (fbPageToken && (!fbPageToken.value || fbPageToken.value.length < 20) && curPage.access_token) {
+            fbPageToken.value = curPage.access_token;
+          }
+        }
       } else if (c.facebook_user_access_token || c.facebook_access_token) {
         fetchFacebookPages(true);
       }
@@ -844,7 +866,18 @@ function clearTopics() {
 // Save Settings
 // ==========================================
 async function saveSettings() {
+  const curPageId = document.getElementById("fb-page-select")?.value;
+  const curToken = document.getElementById("fb-page-token")?.value.trim();
+  if (curPageId && curToken && fbPagesCache) {
+    const page = fbPagesCache.find(p => String(p.id) === String(curPageId));
+    if (page) {
+      page.access_token = curToken;
+    }
+  }
+
   const selectedPages = getSelectedFacebookPages();
+  const checkedPageIds = Array.from(document.querySelectorAll(".fb-page-cb:checked")).map(cb => cb.dataset.id);
+
   const payload = {
     gemini_key: document.getElementById("gemini-key").value.trim(),
     bot_token: document.getElementById("bot-token").value.trim(),
@@ -854,7 +887,8 @@ async function saveSettings() {
     facebook_user_access_token: document.getElementById("fb-user-token")?.value.trim() || "",
     facebook_auto_post: document.getElementById("fb-auto-post-checkbox")?.checked || false,
     facebook_all_pages: document.getElementById("fb-broadcast-all-checkbox")?.checked || false,
-    facebook_selected_pages: selectedPages,
+    facebook_selected_pages: fbPagesCache.length > 0 ? fbPagesCache : selectedPages,
+    facebook_broadcast_page_ids: checkedPageIds,
     format: document.getElementById("video-format").value,
     tone: document.getElementById("video-tone").value,
     topics: getTopicValues()
@@ -1315,6 +1349,27 @@ function renderPagesChecklist(pages, selectedIds = []) {
   });
 }
 
+function populatePageDropdown(pages, selectedId = "") {
+  const selectEl = document.getElementById("fb-page-select");
+  const countBadge = document.getElementById("badge-page-count");
+  if (!selectEl || !pages || pages.length === 0) return;
+  
+  if (countBadge) {
+    countBadge.textContent = `${pages.length} Pages Ready`;
+  }
+  
+  selectEl.innerHTML = `<option value="">-- ${currentLang === 'km' ? 'សូមជ្រើសរើស Page (' + pages.length + ' Pages រួចរាល់)' : 'Choose a Page (' + pages.length + ' Pages Ready)'} --</option>`;
+  pages.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p.id;
+    opt.textContent = `${p.name} (ID: ${p.id})`;
+    if (selectedId && String(p.id) === String(selectedId)) {
+      opt.selected = true;
+    }
+    selectEl.appendChild(opt);
+  });
+}
+
 function getSelectedFacebookPages() {
   const checkboxes = document.querySelectorAll(".fb-page-cb:checked");
   const selected = [];
@@ -1365,13 +1420,7 @@ async function fetchFacebookPages(silent = false) {
       fbPagesCache = data.pages;
       renderPagesChecklist(fbPagesCache);
       
-      selectEl.innerHTML = `<option value="">-- ${currentLang === 'km' ? 'សូមជ្រើសរើស Page (' + data.pages.length + ' Pages)' : 'Choose a Page (' + data.pages.length + ' Pages)'} --</option>`;
-      data.pages.forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p.id;
-        opt.textContent = `${p.name} (ID: ${p.id})`;
-        selectEl.appendChild(opt);
-      });
+      populatePageDropdown(fbPagesCache, selectEl.value || fbPagesCache[0]?.id);
       
       // If page token is currently empty, auto-populate with the first page's token
       if (!pageToken && data.pages[0]?.access_token) {
@@ -1415,17 +1464,17 @@ async function fetchFacebookPages(silent = false) {
 function handleFacebookPageSelect(e) {
   const selectedId = e.target.value;
   if (!selectedId) return;
-  const page = fbPagesCache.find(p => p.id === selectedId);
+  const page = fbPagesCache.find(p => String(p.id) === String(selectedId));
   if (page) {
     const idInput = document.getElementById("fb-page-id");
     const tokenInput = document.getElementById("fb-page-token");
     const statusEl = document.getElementById("fb-verify-status");
     if (idInput) idInput.value = page.id;
-    if (page.access_token && tokenInput) {
-      tokenInput.value = page.access_token;
+    if (tokenInput) {
+      tokenInput.value = page.access_token || "";
     }
     if (statusEl) {
-      statusEl.textContent = `✅ បានជ្រើសរើស: ${page.name}`;
+      statusEl.textContent = `✅ បានជ្រើសរើស: ${page.name} (ID: ${page.id})`;
       statusEl.style.color = "#34d399";
     }
     showToast(currentLang === "km" ? `បានជ្រើសរើស Page៖ ${page.name}` : `Selected Page: ${page.name}`, "info");

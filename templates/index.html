@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261024_06">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261024_07">
 </head>
 <body>
 
@@ -492,6 +492,22 @@
             </p>
           </div>
 
+          <!-- Single Page Select Dropdown (All 23 Pages Ready) -->
+          <div class="form-group" id="fb-single-page-group" style="margin-top: 0.85rem; padding: 0.85rem; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+              <label for="fb-page-select" id="lbl-fb-page-select" style="margin-bottom: 0; font-weight: 600; color: #6ee7b7;">
+                📋 ជ្រើសរើស Facebook Page ពីបញ្ជី (All 23 Pages Dropdown):
+              </label>
+              <span id="badge-page-count" class="badge" style="background: rgba(16, 185, 129, 0.25); color: #a7f3d0; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">23 Pages Ready</span>
+            </div>
+            <select id="fb-page-select" class="form-control" style="font-weight: 500;">
+              <option value="">-- កំពុងផ្ទុកបញ្ជី Pages ទាំង ២៣... --</option>
+            </select>
+            <p class="text-muted" style="font-size: 0.78rem; margin: 0.35rem 0 0 0;">
+              💡 ជ្រើសរើស Page ណាមួយ នោះ Page ID និង Token នឹងត្រូវបានបំពេញដោយស្វ័យប្រវត្តិតែម្តង។
+            </p>
+          </div>
+
           <!-- Facebook Page Access Token -->
           <div class="form-group" style="margin-top: 0.65rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
@@ -505,8 +521,14 @@
               <button type="button" class="eye-btn" data-target="fb-page-token" title="Toggle Visibility">👁</button>
             </div>
             <p class="text-muted" id="desc-fb-page-token" style="font-size: 0.78rem; margin: 0.35rem 0 0 0;">
-              ប្រើជា Default Token សម្រាប់បង្ហោះលើ Page ជាក់លាក់ (ឧ. ចំការដូងក្រអូប អេស៊ីហ្វាម)។
+              ប្រើជា Token សម្រាប់បង្ហោះលើ Page នេះ។ អ្នកអាចកែប្រែ ឬ Save Token ថ្មីបានគ្រប់ពេល។
             </p>
+          </div>
+
+          <!-- Facebook Page ID -->
+          <div class="form-group">
+            <label for="fb-page-id" id="lbl-fb-page-id">Facebook Page ID:</label>
+            <input type="text" id="fb-page-id" class="form-control" placeholder="ឧទាហរណ៍៖ 1000983149762365">
           </div>
 
           <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin: 0.35rem 0;">
@@ -566,20 +588,6 @@
             </div>
           </div>
 
-          <!-- Single Page Select Dropdown -->
-          <div class="form-group" id="fb-single-page-group">
-            <label for="fb-page-select" id="lbl-fb-page-select">ឬជ្រើសរើស Page ជាក់លាក់ណាមួយ (Select Single Page):</label>
-            <select id="fb-page-select" class="form-control">
-              <option value="">-- ចុច 'ទាញយក Pages' ឬជ្រើសរើសពីបញ្ជី --</option>
-            </select>
-          </div>
-
-          <!-- Facebook Page ID -->
-          <div class="form-group">
-            <label for="fb-page-id" id="lbl-fb-page-id">Facebook Page ID:</label>
-            <input type="text" id="fb-page-id" class="form-control" placeholder="ឧទាហរណ៍៖ 109283746501928">
-          </div>
-
           <!-- Security Privacy Banner -->
           <div class="info-banner">
             <div class="info-icon">🔒</div>
@@ -602,6 +610,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- JavaScript -->
-  <script src="/static/js/app.js?v=20261024_06"></script>
+  <script src="/static/js/app.js?v=20261024_07"></script>
 </body>
 </html>
