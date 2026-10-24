@@ -232,13 +232,13 @@ let selectedScriptId = null;
 // Initialization
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-  ensureFormatOptions();
-  setupLanguageSwitcher();
-  setupTabs();
-  setupEyeToggles();
-  setupEventListeners();
-  loadInitialConfig();
-  loadSchedulerStatus();
+  try { ensureFormatOptions(); } catch (e) { console.error("ensureFormatOptions error:", e); }
+  try { setupLanguageSwitcher(); } catch (e) { console.error("setupLanguageSwitcher error:", e); }
+  try { setupTabs(); } catch (e) { console.error("setupTabs error:", e); }
+  try { setupEyeToggles(); } catch (e) { console.error("setupEyeToggles error:", e); }
+  try { setupEventListeners(); } catch (e) { console.error("setupEventListeners error:", e); }
+  try { loadInitialConfig(); } catch (e) { console.error("loadInitialConfig error:", e); }
+  try { loadSchedulerStatus(); } catch (e) { console.error("loadSchedulerStatus error:", e); }
 });
 
 // ==========================================
@@ -471,18 +471,19 @@ function applyLanguage(lang) {
   // Set html lang
   document.documentElement.lang = lang;
   
-  // Header
-  document.getElementById("app-title").textContent = t.appTitle;
-  document.getElementById("app-subtitle").textContent = t.appSubtitle;
-  document.getElementById("lang-label").textContent = t.langButton;
-  document.getElementById("lang-flag").textContent = t.langFlag;
-  
-  // Tabs
+  // Safe setter
   const setTxt = (id, val) => {
     const el = document.getElementById(id);
     if (el) el.textContent = val;
   };
 
+  // Header
+  setTxt("app-title", t.appTitle);
+  setTxt("app-subtitle", t.appSubtitle);
+  setTxt("lang-label", t.langButton);
+  setTxt("lang-flag", t.langFlag);
+
+  // Tabs
   setTxt("tab-title-generator", t.tabGenerator);
   setTxt("tab-title-history", t.tabHistory);
   setTxt("tab-title-scheduler", t.tabScheduler);
@@ -523,11 +524,11 @@ function applyLanguage(lang) {
   setTxt("btn-download-video-text", t.btnDownloadVideo);
   
   // Generator Tab
-  document.getElementById("format-title").textContent = t.formatTitle;
-  document.getElementById("lbl-video-format").textContent = t.lblFormat;
-  document.getElementById("lbl-video-tone").textContent = t.lblTone;
+  setTxt("format-title", t.formatTitle);
+  setTxt("lbl-video-format", t.lblFormat);
+  setTxt("lbl-video-tone", t.lblTone);
   
-  document.getElementById("categories-title").textContent = t.categoriesTitle;
+  setTxt("categories-title", t.categoriesTitle);
   document.querySelectorAll(".cat-text").forEach(el => {
     const cat = el.dataset.cat;
     if (cat === "education") el.textContent = t.catEducation;
@@ -539,43 +540,45 @@ function applyLanguage(lang) {
     if (cat === "religion") el.textContent = t.catReligion;
   });
   
-  document.getElementById("topics-title").textContent = t.topicsTitle;
-  document.getElementById("btn-refresh-topics-text").textContent = t.btnRefreshTopics;
-  document.getElementById("btn-clear-topics-text").textContent = t.btnClearTopics;
-  document.getElementById("topics-subtext").innerHTML = t.topicsSubtext;
+  setTxt("topics-title", t.topicsTitle);
+  setTxt("btn-refresh-topics-text", t.btnRefreshTopics);
+  setTxt("btn-clear-topics-text", t.btnClearTopics);
+  const topicsSubtext = document.getElementById("topics-subtext");
+  if (topicsSubtext) topicsSubtext.innerHTML = t.topicsSubtext;
   for (let i = 1; i <= 5; i++) {
     const el = document.getElementById(`topic-${i}`);
     if (el) el.placeholder = `${t.topicPlaceholder} #${i}`;
   }
-  document.getElementById("btn-run-text").textContent = t.btnRun;
+  setTxt("btn-run-text", t.btnRun);
   
   // Logs
-  document.getElementById("logs-title").textContent = t.logsTitle;
-  document.getElementById("clear-log-text").textContent = t.btnClearLogs;
+  setTxt("logs-title", t.logsTitle);
+  setTxt("clear-log-text", t.btnClearLogs);
   
   // History Tab
-  document.getElementById("history-title").textContent = t.historyTitle;
-  document.getElementById("history-search").placeholder = t.historySearchPlaceholder;
-  document.getElementById("th-date").textContent = t.thDate;
-  document.getElementById("th-topic").textContent = t.thTopic;
-  document.getElementById("th-action").textContent = t.thAction;
-  document.getElementById("btn-copy-text").textContent = t.btnCopy;
-  document.getElementById("btn-resend-text").textContent = t.btnResend;
-  document.getElementById("btn-delete-text").textContent = t.btnDelete;
+  setTxt("history-title", t.historyTitle);
+  const histSearch = document.getElementById("history-search");
+  if (histSearch) histSearch.placeholder = t.historySearchPlaceholder;
+  setTxt("th-date", t.thDate);
+  setTxt("th-topic", t.thTopic);
+  setTxt("th-action", t.thAction);
+  setTxt("btn-copy-text", t.btnCopy);
+  setTxt("btn-resend-text", t.btnResend);
+  setTxt("btn-delete-text", t.btnDelete);
   
   // Dynamic Format Helper Card
   updateFormatHelperCard(document.getElementById("video-format")?.value, document.getElementById("video-tone")?.value, false);
   setTxt("btn-copy-notebooklm-text", t.btnCopyNotebooklm);
   
   // Scheduler Tab
-  document.getElementById("scheduler-card-title").textContent = t.schedCardTitle;
-  document.getElementById("sched-enable-title").textContent = t.schedEnableTitle;
-  document.getElementById("sched-enable-desc").textContent = t.schedEnableDesc;
-  document.getElementById("lbl-sched-time").textContent = t.lblSchedTime;
-  document.getElementById("lbl-sched-auto-niche").textContent = t.lblSchedAutoNiche;
-  document.getElementById("sched-info-title").textContent = t.schedInfoTitle;
-  document.getElementById("sched-info-desc").textContent = t.schedInfoDesc;
-  document.getElementById("btn-save-sched-text").textContent = t.btnSaveSched;
+  setTxt("scheduler-card-title", t.schedCardTitle);
+  setTxt("sched-enable-title", t.schedEnableTitle);
+  setTxt("sched-enable-desc", t.schedEnableDesc);
+  setTxt("lbl-sched-time", t.lblSchedTime);
+  setTxt("lbl-sched-auto-niche", t.lblSchedAutoNiche);
+  setTxt("sched-info-title", t.schedInfoTitle);
+  setTxt("sched-info-desc", t.schedInfoDesc);
+  setTxt("btn-save-sched-text", t.btnSaveSched);
 }
 
 // ==========================================
@@ -659,63 +662,40 @@ function setupEyeToggles() {
 // Event Listeners
 // ==========================================
 function setupEventListeners() {
-  const saveBtn = document.getElementById("btn-save-settings");
-  if (saveBtn) saveBtn.addEventListener("click", saveSettings);
-  
-  const saveBtnBottom = document.getElementById("btn-save-settings-bottom");
-  if (saveBtnBottom) saveBtnBottom.addEventListener("click", saveSettings);
-  
-  document.getElementById("btn-refresh-topics").addEventListener("click", refreshDailyTopics);
-  document.getElementById("btn-clear-topics").addEventListener("click", clearTopics);
-  document.getElementById("btn-run-batch").addEventListener("click", runBatchGeneration);
-  document.getElementById("btn-clear-logs").addEventListener("click", clearLogs);
+  const addClick = (id, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("click", fn);
+  };
+  const addEvent = (id, evt, fn) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener(evt, fn);
+  };
+
+  addClick("btn-save-settings", saveSettings);
+  addClick("btn-save-settings-bottom", saveSettings);
+  addClick("btn-refresh-topics", refreshDailyTopics);
+  addClick("btn-clear-topics", clearTopics);
+  addClick("btn-run-batch", runBatchGeneration);
+  addClick("btn-clear-logs", clearLogs);
   
   // History tab
-  document.getElementById("btn-refresh-history").addEventListener("click", loadHistory);
-  document.getElementById("history-search").addEventListener("input", filterHistory);
-  document.getElementById("btn-copy-script").addEventListener("click", copySelectedScript);
-  
-  const btnCopyNbScript = document.getElementById("btn-copy-notebooklm");
-  if (btnCopyNbScript) btnCopyNbScript.addEventListener("click", copyScriptForNotebookLM);
-  
-  const btnResend = document.getElementById("btn-resend-script");
-  if (btnResend) btnResend.addEventListener("click", resendSelectedScript);
-  
-  const btnPostFb = document.getElementById("btn-post-facebook");
-  if (btnPostFb) btnPostFb.addEventListener("click", postSelectedScriptToFacebook);
-  
-  const btnCreateVid = document.getElementById("btn-create-video");
-  if (btnCreateVid) btnCreateVid.addEventListener("click", createReelsVideoForSelectedScript);
-  
-  const btnSendApproval = document.getElementById("btn-send-approval");
-  if (btnSendApproval) btnSendApproval.addEventListener("click", handleSendCurrentScriptVideoForApproval);
-
-  const btnPrevSendApproval = document.getElementById("btn-preview-send-approval");
-  if (btnPrevSendApproval) btnPrevSendApproval.addEventListener("click", handleSendRenderedVideoForApproval);
-
-  const btnTriggerUpload = document.getElementById("btn-trigger-upload");
-  if (btnTriggerUpload) btnTriggerUpload.addEventListener("click", triggerVideoFileUpload);
-
-  const videoFileInput = document.getElementById("video-file-input");
-  if (videoFileInput) videoFileInput.addEventListener("change", handleVideoFileUpload);
-
-  const btnUrlSendApproval = document.getElementById("btn-url-send-approval");
-  if (btnUrlSendApproval) btnUrlSendApproval.addEventListener("click", handleSendCustomUrlForApproval);
-  
-  const btnBroadcastVid = document.getElementById("btn-broadcast-video-fb");
-  if (btnBroadcastVid) btnBroadcastVid.addEventListener("click", broadcastRenderedVideoToFacebook);
-
-  const btnBroadcastUrl = document.getElementById("btn-broadcast-url-fb");
-  if (btnBroadcastUrl) btnBroadcastUrl.addEventListener("click", broadcastCustomVideoUrl);
-  
-  const btnVerifyFb = document.getElementById("btn-verify-fb");
-  if (btnVerifyFb) btnVerifyFb.addEventListener("click", verifyFacebookPage);
-  
-  const btnFetchFb = document.getElementById("btn-fetch-fb-pages");
-  if (btnFetchFb) btnFetchFb.addEventListener("click", fetchFacebookPages);
-  
-  const fbSelect = document.getElementById("fb-page-select");
-  if (fbSelect) fbSelect.addEventListener("change", handleFacebookPageSelect);
+  addClick("btn-refresh-history", loadHistory);
+  addEvent("history-search", "input", filterHistory);
+  addClick("btn-copy-script", copySelectedScript);
+  addClick("btn-copy-notebooklm", copyScriptForNotebookLM);
+  addClick("btn-resend-script", resendSelectedScript);
+  addClick("btn-post-facebook", postSelectedScriptToFacebook);
+  addClick("btn-create-video", createReelsVideoForSelectedScript);
+  addClick("btn-send-approval", handleSendCurrentScriptVideoForApproval);
+  addClick("btn-preview-send-approval", handleSendRenderedVideoForApproval);
+  addClick("btn-trigger-upload", triggerVideoFileUpload);
+  addEvent("video-file-input", "change", handleVideoFileUpload);
+  addClick("btn-url-send-approval", handleSendCustomUrlForApproval);
+  addClick("btn-broadcast-video-fb", broadcastRenderedVideoToFacebook);
+  addClick("btn-broadcast-url-fb", broadcastCustomVideoUrl);
+  addClick("btn-verify-fb", verifyFacebookPage);
+  addClick("btn-fetch-fb-pages", fetchFacebookPages);
+  addEvent("fb-page-select", "change", handleFacebookPageSelect);
   
   const fbTokenInput = document.getElementById("fb-page-token");
   if (fbTokenInput) {
@@ -728,40 +708,21 @@ function setupEventListeners() {
     });
   }
   
-  document.getElementById("btn-select-all-pages")?.addEventListener("click", () => {
+  addClick("btn-select-all-pages", () => {
     document.querySelectorAll(".fb-page-cb").forEach(cb => cb.checked = true);
   });
-  document.getElementById("btn-deselect-all-pages")?.addEventListener("click", () => {
+  addClick("btn-deselect-all-pages", () => {
     document.querySelectorAll(".fb-page-cb").forEach(cb => cb.checked = false);
   });
   
-  document.getElementById("btn-delete-script").addEventListener("click", deleteSelectedScript);
-  
-  // Format dropdown change listener
-  const formatSelect = document.getElementById("video-format");
-  if (formatSelect) {
-    formatSelect.addEventListener("change", handleFormatChange);
-  }
-  
-  // Tone dropdown change listener
-  const toneSelect = document.getElementById("video-tone");
-  if (toneSelect) {
-    toneSelect.addEventListener("change", handleToneChange);
-  }
-  
-  // Format Guidance Prompt Copy
-  const btnCopyFormat = document.getElementById("btn-copy-format-prompt");
-  if (btnCopyFormat) btnCopyFormat.addEventListener("click", copyActiveFormatPrompt);
-
-  const btnCopyNbPrompt = document.getElementById("btn-copy-notebooklm-prompt");
-  if (btnCopyNbPrompt) btnCopyNbPrompt.addEventListener("click", copyActiveFormatPrompt);
-  
-  const btnCopyNbEnCc = document.getElementById("btn-copy-nb-en-cc");
-  if (btnCopyNbEnCc) btnCopyNbEnCc.addEventListener("click", copyActiveFormatPrompt);
-  
-  // Scheduler
-  document.getElementById("btn-save-scheduler").addEventListener("click", saveSchedulerSettings);
-  document.getElementById("sched-enabled-checkbox").addEventListener("change", updateSchedulerBadge);
+  addClick("btn-delete-script", deleteSelectedScript);
+  addEvent("video-format", "change", handleFormatChange);
+  addEvent("video-tone", "change", handleToneChange);
+  addClick("btn-copy-format-prompt", copyActiveFormatPrompt);
+  addClick("btn-copy-notebooklm-prompt", copyActiveFormatPrompt);
+  addClick("btn-copy-nb-en-cc", copyActiveFormatPrompt);
+  addClick("btn-save-scheduler", saveSchedulerSettings);
+  addEvent("sched-enabled-checkbox", "change", updateSchedulerBadge);
 }
 
 // ==========================================
