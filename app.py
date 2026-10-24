@@ -39,6 +39,7 @@ DEFAULT_CONFIG = {
     "chat_id": "",
     "facebook_page_id": "1000983149762365",
     "facebook_access_token": DEFAULT_FB_TOKEN,
+    "facebook_user_access_token": "",
     "facebook_auto_post": True,
     "facebook_all_pages": True,
     "facebook_selected_pages": [],
@@ -80,6 +81,7 @@ def load_config():
     cfg["chat_id"] = os.environ.get("TELEGRAM_CHAT_ID") or cfg.get("chat_id") or DEFAULT_CONFIG["chat_id"]
     cfg["facebook_page_id"] = os.environ.get("FACEBOOK_PAGE_ID") or cfg.get("facebook_page_id") or DEFAULT_CONFIG["facebook_page_id"]
     cfg["facebook_access_token"] = os.environ.get("FACEBOOK_ACCESS_TOKEN") or cfg.get("facebook_access_token") or DEFAULT_CONFIG["facebook_access_token"]
+    cfg["facebook_user_access_token"] = os.environ.get("FACEBOOK_USER_ACCESS_TOKEN") or cfg.get("facebook_user_access_token") or DEFAULT_CONFIG.get("facebook_user_access_token", "")
     return cfg
 
 def save_config(cfg):
@@ -393,7 +395,12 @@ def api_verify_facebook():
 def api_get_facebook_pages():
     data = request.json or {}
     cfg = load_config()
-    token = data.get("access_token") or cfg.get("facebook_access_token")
+    token = (
+        data.get("user_access_token")
+        or data.get("access_token")
+        or cfg.get("facebook_user_access_token")
+        or cfg.get("facebook_access_token")
+    )
     ok, msg, pages = facebook_service.get_user_pages(token)
     return jsonify({"success": ok, "message": msg, "pages": pages})
 

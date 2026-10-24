@@ -35,7 +35,10 @@ const translations = {
     fbAutoTitle: "Auto-Post ឡើង Facebook Page",
     fbAutoDesc: "ពេលបង្កើតស្គ្រីបរួច នឹង Post ឡើង Page ភ្លាមៗដោយស្វ័យប្រវត្ត។",
     lblFbPageId: "Facebook Page ID:",
-    lblFbPageToken: "Facebook Page Access Token:",
+    lblFbUserToken: "🔑 Facebook User Access Token (Optional - គ្រប់គ្រង Pages ទាំងអស់):",
+    descFbUserToken: "💡 ប្រើសម្រាប់ទាញយក Facebook Pages ទាំងអស់ដែលអ្នកគ្រប់គ្រង (23 Pages) និងបង្កើត Page Tokens ដោយស្វ័យប្រវត្តិ។",
+    lblFbPageToken: "📘 Facebook Page Access Token (Page Token ជាក់លាក់):",
+    descFbPageToken: "ប្រើជា Default Token សម្រាប់បង្ហោះលើ Page ជាក់លាក់ (ឧ. ចំការដូងក្រអូប អេស៊ីហ្វាម)។",
     btnVerifyFb: "ផ្ទៀងផ្ទាត់ Facebook Page",
     btnPostFacebook: "Post Facebook",
     btnFetchFbPages: "ទាញយក Pages របស់ខ្ញុំ",
@@ -139,7 +142,10 @@ const translations = {
     fbAutoTitle: "Auto-Post to Facebook Page",
     fbAutoDesc: "Automatically publish generated scripts to your Page upon generation.",
     lblFbPageId: "Facebook Page ID:",
-    lblFbPageToken: "Facebook Page Access Token:",
+    lblFbUserToken: "🔑 Facebook User Access Token (Optional - Manage All Pages):",
+    descFbUserToken: "💡 Used to fetch all managed Facebook Pages (23 Pages) and generate Page Tokens automatically.",
+    lblFbPageToken: "📘 Facebook Page Access Token (Specific Page Token):",
+    descFbPageToken: "Used as the default token to post to a specific Page (e.g. ចំការដូងក្រអូប អេស៊ីហ្វាម).",
     btnVerifyFb: "Verify Facebook Page",
     btnPostFacebook: "Post to Facebook",
     btnCreateVideo: "Create AI Reels Video",
@@ -502,7 +508,10 @@ function applyLanguage(lang) {
   setTxt("fb-auto-title", t.fbAutoTitle);
   setTxt("fb-auto-desc", t.fbAutoDesc);
   setTxt("lbl-fb-page-id", t.lblFbPageId);
+  setTxt("lbl-fb-user-token", t.lblFbUserToken);
+  setTxt("desc-fb-user-token", t.descFbUserToken);
   setTxt("lbl-fb-page-token", t.lblFbPageToken);
+  setTxt("desc-fb-page-token", t.descFbPageToken);
   setTxt("lbl-fb-page-select", t.lblFbPageSelect);
   setTxt("fb-broadcast-all-title", t.fbBroadcastAllTitle);
   setTxt("fb-broadcast-all-desc", t.fbBroadcastAllDesc);
@@ -749,10 +758,12 @@ async function loadInitialConfig() {
       document.getElementById("chat-id").value = c.chat_id || DEFAULT_CHAT_ID;
       
       const fbPageId = document.getElementById("fb-page-id");
+      const fbUserToken = document.getElementById("fb-user-token");
       const fbPageToken = document.getElementById("fb-page-token");
       const fbAutoPost = document.getElementById("fb-auto-post-checkbox");
       const fbBroadcastAll = document.getElementById("fb-broadcast-all-checkbox");
       if (fbPageId) fbPageId.value = c.facebook_page_id || "";
+      if (fbUserToken) fbUserToken.value = c.facebook_user_access_token || "";
       if (fbPageToken) fbPageToken.value = c.facebook_access_token || "";
       if (fbAutoPost) fbAutoPost.checked = !!c.facebook_auto_post;
       if (fbBroadcastAll) fbBroadcastAll.checked = !!c.facebook_all_pages;
@@ -760,7 +771,7 @@ async function loadInitialConfig() {
       if (c.facebook_selected_pages && c.facebook_selected_pages.length > 0) {
         fbPagesCache = c.facebook_selected_pages;
         renderPagesChecklist(fbPagesCache);
-      } else if (c.facebook_access_token) {
+      } else if (c.facebook_user_access_token || c.facebook_access_token) {
         fetchFacebookPages(true);
       }
       
@@ -840,6 +851,7 @@ async function saveSettings() {
     chat_id: document.getElementById("chat-id").value.trim(),
     facebook_page_id: document.getElementById("fb-page-id")?.value.trim() || "",
     facebook_access_token: document.getElementById("fb-page-token")?.value.trim() || "",
+    facebook_user_access_token: document.getElementById("fb-user-token")?.value.trim() || "",
     facebook_auto_post: document.getElementById("fb-auto-post-checkbox")?.checked || false,
     facebook_all_pages: document.getElementById("fb-broadcast-all-checkbox")?.checked || false,
     facebook_selected_pages: selectedPages,
@@ -1226,7 +1238,9 @@ async function broadcastRenderedVideoToFacebook() {
 
 async function verifyFacebookPage() {
   const pageId = document.getElementById("fb-page-id")?.value.trim();
-  const token = document.getElementById("fb-page-token")?.value.trim();
+  const pageToken = document.getElementById("fb-page-token")?.value.trim();
+  const userToken = document.getElementById("fb-user-token")?.value.trim();
+  const token = pageToken || userToken;
   const statusEl = document.getElementById("fb-verify-status");
   const btn = document.getElementById("btn-verify-fb");
   
@@ -1319,13 +1333,15 @@ function getSelectedFacebookPages() {
 }
 
 async function fetchFacebookPages(silent = false) {
-  const token = document.getElementById("fb-page-token")?.value.trim();
+  const userToken = document.getElementById("fb-user-token")?.value.trim();
+  const pageToken = document.getElementById("fb-page-token")?.value.trim();
+  const token = userToken || pageToken;
   const btn = document.getElementById("btn-fetch-fb-pages");
   const statusEl = document.getElementById("fb-verify-status");
   const selectEl = document.getElementById("fb-page-select");
   
   if (!token) {
-    if (!silent) showToast(currentLang === "km" ? "សូមបញ្ចូល Facebook Access Token ជាមុនសិន!" : "Please enter your Facebook Access Token first!", "error");
+    if (!silent) showToast(currentLang === "km" ? "សូមបញ្ចូល Facebook User Token ឬ Page Token ជាមុនសិន!" : "Please enter Facebook User Token or Page Token first!", "error");
     return;
   }
   
@@ -1339,7 +1355,10 @@ async function fetchFacebookPages(silent = false) {
     const res = await fetch("/api/facebook/pages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ access_token: token })
+      body: JSON.stringify({ 
+        user_access_token: userToken,
+        access_token: token 
+      })
     });
     const data = await res.json();
     if (data.success && data.pages && data.pages.length > 0) {
@@ -1353,15 +1372,24 @@ async function fetchFacebookPages(silent = false) {
         opt.textContent = `${p.name} (ID: ${p.id})`;
         selectEl.appendChild(opt);
       });
+      
+      // If page token is currently empty, auto-populate with the first page's token
+      if (!pageToken && data.pages[0]?.access_token) {
+        const pageTokenInput = document.getElementById("fb-page-token");
+        const pageIdInput = document.getElementById("fb-page-id");
+        if (pageTokenInput) pageTokenInput.value = data.pages[0].access_token;
+        if (pageIdInput) pageIdInput.value = data.pages[0].id;
+      }
+
       if (statusEl) {
         if (data.pages.length === 1) {
-          statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានភ្ជាប់ Page \'' + data.pages[0].name + '\' (ដើម្បី Post លើគ្រប់ ២៣ Pages សូមប្រើ User Token)' : 'Connected Page \'' + data.pages[0].name + '\' (Use User Token for all 23 Pages)'}`;
+          statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានភ្ជាប់ Page \'' + data.pages[0].name + '\' (ដើម្បីគ្រប់គ្រងគ្រប់ ២៣ Pages សូមប្រើ User Token ខាងលើ)' : 'Connected Page \'' + data.pages[0].name + '\' (Use User Token above for all 23 Pages)'}`;
         } else {
-          statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានរកឃើញ ' + data.pages.length + ' Pages' : 'Found ' + data.pages.length + ' Pages'}`;
+          statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានរកឃើញ ' + data.pages.length + ' Pages តាមរយៈ User Token!' : 'Found ' + data.pages.length + ' Pages via User Token!'}`;
         }
         statusEl.style.color = "#34d399";
       }
-      if (!silent) showToast(data.pages.length > 1 ? translations[currentLang].msgPagesLoaded : (currentLang === 'km' ? 'បានភ្ជាប់ Page ' + data.pages[0].name : 'Connected Page ' + data.pages[0].name), "success");
+      if (!silent) showToast(data.pages.length > 1 ? (currentLang === 'km' ? `បានរកឃើញ ${data.pages.length} Pages ជោគជ័យ!` : `Loaded ${data.pages.length} Facebook Pages!`) : (currentLang === 'km' ? 'បានភ្ជាប់ Page ' + data.pages[0].name : 'Connected Page ' + data.pages[0].name), "success");
     } else {
       const isExpired = (data.message || "").toLowerCase().includes("expired");
       if (statusEl) {
