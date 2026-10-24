@@ -36,5 +36,7 @@ Desktop.ini
 
 # Chrome automation profiles
 *chrome_profile*/
+*fb_chrome_profile*/
+*tiktok_chrome_profile*/
 chrome_data/
 

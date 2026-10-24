@@ -7,6 +7,7 @@ import os
 import database
 import ai_service
 import telegram_service
+import facebook_service
 import topics_engine
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -27,6 +28,9 @@ DEFAULT_CONFIG = {
     "gemini_key": "",
     "bot_token": "",
     "chat_id": "",
+    "facebook_page_id": "",
+    "facebook_access_token": "",
+    "facebook_auto_post": False,
     "language": "km",
     "format": "NotebookLM Video Overview (Explainer Video ៥+ នាទី | សំឡេងខ្មែរ + ស្លាយ/CC អង់គ្លេស)",
     "tone": "ទាក់ទាញ & រំភើប (Hook & Catchy)",
@@ -53,6 +57,8 @@ def load_config():
     cfg["gemini_key"] = os.environ.get("GEMINI_API_KEY") or cfg.get("gemini_key") or DEFAULT_CONFIG["gemini_key"]
     cfg["bot_token"] = os.environ.get("TELEGRAM_BOT_TOKEN") or cfg.get("bot_token") or DEFAULT_CONFIG["bot_token"]
     cfg["chat_id"] = os.environ.get("TELEGRAM_CHAT_ID") or cfg.get("chat_id") or DEFAULT_CONFIG["chat_id"]
+    cfg["facebook_page_id"] = os.environ.get("FACEBOOK_PAGE_ID") or cfg.get("facebook_page_id") or DEFAULT_CONFIG["facebook_page_id"]
+    cfg["facebook_access_token"] = os.environ.get("FACEBOOK_ACCESS_TOKEN") or cfg.get("facebook_access_token") or DEFAULT_CONFIG["facebook_access_token"]
     return cfg
 
 def save_config(cfg):
@@ -96,6 +102,10 @@ def run_daily_automation(cfg):
     # ស្វែងរក ៥ ប្រធានបទប្លែកៗគ្នាជារៀងរាល់ថ្ងៃ
     _, topics, source = topics_engine.get_daily_diverse_topics(gemini_key, lang=lang)
     
+    fb_page_id = cfg.get("facebook_page_id")
+    fb_token = cfg.get("facebook_access_token")
+    fb_auto = cfg.get("facebook_auto_post", False)
+    
     success_count = 0
     for idx, topic in enumerate(topics[:5]):
         ok, content, model = ai_service.generate_script(gemini_key, topic, platform=platform, tone=tone, lang=lang)
@@ -103,6 +113,12 @@ def run_daily_automation(cfg):
             database.save_script(topic, content)
             tg_text = f"📝 *ស្គ្រីបទី {idx+1}: {topic}*\n\n{content}"
             telegram_service.send_message(bot_token, chat_id, tg_text)
+            
+            # Auto-post to Facebook Page if configured
+            if fb_auto and fb_page_id and fb_token:
+                fb_msg = f"🎬 {topic}\n\n{content}"
+                facebook_service.post_to_page(fb_page_id, fb_token, fb_msg)
+                
             success_count += 1
         time.sleep(2)
         
@@ -219,6 +235,14 @@ def api_generate_batch():
     cfg["gemini_key"] = key
     cfg["bot_token"] = bot_token
     cfg["chat_id"] = chat_id
+    
+    fb_page_id = data.get("facebook_page_id") or cfg.get("facebook_page_id")
+    fb_token = data.get("facebook_access_token") or cfg.get("facebook_access_token")
+    fb_auto = data.get("facebook_auto_post") if "facebook_auto_post" in data else cfg.get("facebook_auto_post", False)
+    
+    cfg["facebook_page_id"] = fb_page_id
+    cfg["facebook_access_token"] = fb_token
+    cfg["facebook_auto_post"] = fb_auto
     cfg["format"] = platform
     cfg["tone"] = tone
     cfg["topics"] = clean_topics
@@ -244,6 +268,13 @@ def api_generate_batch():
         tg_text = f"📝 *ស្គ្រីបទី {idx+1}: {topic}*\n\n{content}"
         tg_ok, tg_status = telegram_service.send_message(bot_token, chat_id, tg_text)
         
+        # Post to Facebook Page if enabled
+        fb_ok = False
+        fb_status = "Not configured"
+        if fb_auto and fb_page_id and fb_token:
+            fb_msg = f"🎬 {topic}\n\n{content}"
+            fb_ok, fb_status = facebook_service.post_to_page(fb_page_id, fb_token, fb_msg)
+            
         results.append({
             "index": idx + 1,
             "id": script_id,
@@ -253,6 +284,8 @@ def api_generate_batch():
             "date": date_str,
             "telegram_sent": tg_ok,
             "telegram_status": tg_status,
+            "facebook_posted": fb_ok,
+            "facebook_status": fb_status,
             "content": content
         })
         
@@ -287,6 +320,33 @@ def api_resend_script(script_id):
     
     text = f"📝 *[ផ្ញើឡើងវិញ / Resend]* {script['topic']}\n\n{script['content']}"
     ok, msg = telegram_service.send_message(bot_token, chat_id, text)
+    return jsonify({"success": ok, "message": msg})
+
+@app.route("/api/history/<int:script_id>/post-facebook", methods=["POST"])
+def api_post_facebook_script(script_id):
+    script = database.get_script_by_id(script_id)
+    if not script:
+        return jsonify({"success": False, "error": "Script not found"}), 404
+        
+    cfg = load_config()
+    page_id = cfg.get("facebook_page_id")
+    access_token = cfg.get("facebook_access_token")
+    
+    if not page_id or not access_token:
+        return jsonify({"success": False, "error": "Facebook Page ID and Access Token are not configured in Settings"}), 400
+        
+    message = f"🎬 {script['topic']}\n\n{script['content']}"
+    ok, msg = facebook_service.post_to_page(page_id, access_token, message)
+    return jsonify({"success": ok, "message": msg})
+
+@app.route("/api/facebook/verify", methods=["POST"])
+def api_verify_facebook():
+    data = request.json or {}
+    cfg = load_config()
+    page_id = data.get("facebook_page_id") or cfg.get("facebook_page_id")
+    access_token = data.get("facebook_access_token") or cfg.get("facebook_access_token")
+    
+    ok, msg = facebook_service.verify_page_connection(page_id, access_token)
     return jsonify({"success": ok, "message": msg})
 
 @app.route("/api/scheduler", methods=["GET"])

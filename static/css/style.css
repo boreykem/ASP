@@ -978,3 +978,17 @@ input:checked + .slider:before {
   white-space: pre-wrap;
 }
 
+.section-divider {
+  border: 0;
+  height: 1px;
+  background: var(--border-glass);
+  margin: 1.25rem 0;
+}
+
+.subheading-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  margin: 0;
+}
+

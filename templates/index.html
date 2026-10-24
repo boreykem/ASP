@@ -306,6 +306,9 @@
                 <button id="btn-resend-script" class="btn btn-primary btn-sm">
                   📤 <span id="btn-resend-text">ផ្ញើចូល Telegram</span>
                 </button>
+                <button id="btn-post-facebook" class="btn btn-secondary btn-sm" title="Post ឡើង Facebook Page">
+                  📘 <span id="btn-post-facebook-text">Post Facebook</span>
+                </button>
                 <button id="btn-delete-script" class="btn btn-danger btn-sm">
                   🗑️ <span id="btn-delete-text">លុប</span>
                 </button>
@@ -410,6 +413,51 @@
           <div class="form-group">
             <label for="chat-id" id="lbl-chat-id">Telegram Chat ID:</label>
             <input type="text" id="chat-id" class="form-control" value="" placeholder="ឧទាហរណ៍៖ 123456789">
+          </div>
+
+          <hr class="section-divider">
+          
+          <!-- Facebook Page Integration Section -->
+          <div class="card-title-group" style="margin-top: 0.5rem;">
+            <span class="card-icon">📘</span>
+            <div>
+              <h3 id="fb-settings-title" class="subheading-title">Facebook Page API (Meta Graph API)</h3>
+              <p class="text-muted" id="fb-settings-desc">បង្ហោះស្គ្រីប និងអត្ថបទទៅកាន់ Facebook Page របស់អ្នកដោយស្វ័យប្រវត្តិ។</p>
+            </div>
+          </div>
+
+          <!-- Facebook Auto-Post Toggle -->
+          <div class="scheduler-toggle-box">
+            <div>
+              <h4 id="fb-auto-title">Auto-Post ឡើង Facebook Page</h4>
+              <p class="text-muted" id="fb-auto-desc">ពេលបង្កើតស្គ្រីបរួច នឹង Post ឡើង Page ភ្លាមៗដោយស្វ័យប្រវត្ត។</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="fb-auto-post-checkbox">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <!-- Facebook Page ID -->
+          <div class="form-group">
+            <label for="fb-page-id" id="lbl-fb-page-id">Facebook Page ID:</label>
+            <input type="text" id="fb-page-id" class="form-control" placeholder="ឧទាហរណ៍៖ 109283746501928">
+          </div>
+
+          <!-- Facebook Page Access Token -->
+          <div class="form-group">
+            <label for="fb-page-token" id="lbl-fb-page-token">Facebook Page Access Token:</label>
+            <div class="input-with-button">
+              <input type="password" id="fb-page-token" class="form-control" placeholder="EAA... ឬ Page Access Token របស់អ្នក">
+              <button type="button" class="eye-btn" data-target="fb-page-token" title="Toggle Visibility">👁</button>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; align-items: center; margin: 0.25rem 0;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-verify-fb" title="ផ្ទៀងផ្ទាត់ការតភ្ជាប់ Facebook Page">
+              🔍 <span id="btn-verify-fb-text">ផ្ទៀងផ្ទាត់ Facebook Page</span>
+            </button>
+            <span id="fb-verify-status" class="text-muted" style="font-size: 0.85rem;"></span>
           </div>
 
           <!-- Security Privacy Banner -->

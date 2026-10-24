@@ -30,6 +30,17 @@ const translations = {
     lblBotToken: "Telegram Bot Token:",
     lblChatId: "Telegram Chat ID:",
     
+    fbSettingsTitle: "Facebook Page API (Meta Graph API)",
+    fbSettingsDesc: "បង្ហោះស្គ្រីប និងអត្ថបទទៅកាន់ Facebook Page របស់អ្នកដោយស្វ័យប្រវត្តិ។",
+    fbAutoTitle: "Auto-Post ឡើង Facebook Page",
+    fbAutoDesc: "ពេលបង្កើតស្គ្រីបរួច នឹង Post ឡើង Page ភ្លាមៗដោយស្វ័យប្រវត្ត។",
+    lblFbPageId: "Facebook Page ID:",
+    lblFbPageToken: "Facebook Page Access Token:",
+    btnVerifyFb: "ផ្ទៀងផ្ទាត់ Facebook Page",
+    btnPostFacebook: "Post Facebook",
+    msgFbPosted: "បានបង្ហោះឡើង Facebook Page ជោគជ័យ!",
+    msgFbVerified: "បានភ្ជាប់ទៅកាន់ Facebook Page ជោគជ័យ!",
+    
     formatTitle: "ទម្រង់វីដេអូ និងទឹកដមសម្លេង",
     lblFormat: "ទម្រង់ (Format):",
     lblTone: "ទឹកដម (Tone):",
@@ -111,6 +122,17 @@ const translations = {
     lblGeminiKey: "Gemini API Key:",
     lblBotToken: "Telegram Bot Token:",
     lblChatId: "Telegram Chat ID:",
+    
+    fbSettingsTitle: "Facebook Page API (Meta Graph API)",
+    fbSettingsDesc: "Automatically publish scripts and posts directly to your Facebook Page.",
+    fbAutoTitle: "Auto-Post to Facebook Page",
+    fbAutoDesc: "Automatically publish generated scripts to your Page upon generation.",
+    lblFbPageId: "Facebook Page ID:",
+    lblFbPageToken: "Facebook Page Access Token:",
+    btnVerifyFb: "Verify Facebook Page",
+    btnPostFacebook: "Post to Facebook",
+    msgFbPosted: "Successfully posted to Facebook Page!",
+    msgFbVerified: "Successfully connected to Facebook Page!",
     
     formatTitle: "Video Format & Tone",
     lblFormat: "Format:",
@@ -452,6 +474,16 @@ function applyLanguage(lang) {
   setTxt("lbl-bot-token", t.lblBotToken);
   setTxt("lbl-chat-id", t.lblChatId);
   
+  // Facebook Page Settings
+  setTxt("fb-settings-title", t.fbSettingsTitle);
+  setTxt("fb-settings-desc", t.fbSettingsDesc);
+  setTxt("fb-auto-title", t.fbAutoTitle);
+  setTxt("fb-auto-desc", t.fbAutoDesc);
+  setTxt("lbl-fb-page-id", t.lblFbPageId);
+  setTxt("lbl-fb-page-token", t.lblFbPageToken);
+  setTxt("btn-verify-fb-text", t.btnVerifyFb);
+  setTxt("btn-post-facebook-text", t.btnPostFacebook);
+  
   // Generator Tab
   document.getElementById("format-title").textContent = t.formatTitle;
   document.getElementById("lbl-video-format").textContent = t.lblFormat;
@@ -612,6 +644,13 @@ function setupEventListeners() {
   if (btnCopyNbScript) btnCopyNbScript.addEventListener("click", copyScriptForNotebookLM);
   
   document.getElementById("btn-resend-script").addEventListener("click", resendSelectedScript);
+  
+  const btnPostFb = document.getElementById("btn-post-facebook");
+  if (btnPostFb) btnPostFb.addEventListener("click", postSelectedScriptToFacebook);
+  
+  const btnVerifyFb = document.getElementById("btn-verify-fb");
+  if (btnVerifyFb) btnVerifyFb.addEventListener("click", verifyFacebookPage);
+  
   document.getElementById("btn-delete-script").addEventListener("click", deleteSelectedScript);
   
   // Format dropdown change listener
@@ -657,6 +696,13 @@ async function loadInitialConfig() {
       document.getElementById("gemini-key").value = c.gemini_key || DEFAULT_GEMINI_KEY;
       document.getElementById("bot-token").value = c.bot_token || DEFAULT_BOT_TOKEN;
       document.getElementById("chat-id").value = c.chat_id || DEFAULT_CHAT_ID;
+      
+      const fbPageId = document.getElementById("fb-page-id");
+      const fbPageToken = document.getElementById("fb-page-token");
+      const fbAutoPost = document.getElementById("fb-auto-post-checkbox");
+      if (fbPageId) fbPageId.value = c.facebook_page_id || "";
+      if (fbPageToken) fbPageToken.value = c.facebook_access_token || "";
+      if (fbAutoPost) fbAutoPost.checked = !!c.facebook_auto_post;
       
       if (c.format) {
         document.getElementById("video-format").value = c.format;
@@ -731,6 +777,9 @@ async function saveSettings() {
     gemini_key: document.getElementById("gemini-key").value.trim(),
     bot_token: document.getElementById("bot-token").value.trim(),
     chat_id: document.getElementById("chat-id").value.trim(),
+    facebook_page_id: document.getElementById("fb-page-id")?.value.trim() || "",
+    facebook_access_token: document.getElementById("fb-page-token")?.value.trim() || "",
+    facebook_auto_post: document.getElementById("fb-auto-post-checkbox")?.checked || false,
     format: document.getElementById("video-format").value,
     tone: document.getElementById("video-tone").value,
     topics: getTopicValues()
@@ -832,6 +881,11 @@ async function runBatchGeneration() {
             appendLog(`   ✅ ${currentLang === 'km' ? 'បានរក្សាទុក និងផ្ញើចូល Telegram ជោគជ័យ' : 'Saved & sent to Telegram successfully'}`, "success");
           } else {
             appendLog(`   ⚠️ ${currentLang === 'km' ? 'រក្សាទុកជោគជ័យ ប៉ុន្តែផ្ញើ Telegram បរាជ័យ' : 'Saved, but Telegram delivery failed'}: ${r.telegram_status}`, "error");
+          }
+          if (r.facebook_posted) {
+            appendLog(`   📘 ${currentLang === 'km' ? 'បានបង្ហោះឡើង Facebook Page ជោគជ័យ' : 'Posted to Facebook Page successfully'}`, "success");
+          } else if (r.facebook_status && r.facebook_status !== "Not configured") {
+            appendLog(`   ⚠️ Facebook: ${r.facebook_status}`, "error");
           }
         } else {
           appendLog(`[Script ${r.index}] ❌ ${r.topic} - ${r.error}`, "error");
@@ -989,6 +1043,74 @@ async function resendSelectedScript() {
     }
   } catch (err) {
     showToast("Error: " + err.message, "error");
+  }
+}
+
+async function postSelectedScriptToFacebook() {
+  if (!selectedScriptId) return;
+  const btn = document.getElementById("btn-post-facebook");
+  if (btn) btn.disabled = true;
+  showToast(currentLang === "km" ? "កំពុងបង្ហោះទៅកាន់ Facebook Page..." : "Posting to Facebook Page...", "info");
+  
+  try {
+    const res = await fetch(`/api/history/${selectedScriptId}/post-facebook`, { method: "POST" });
+    const data = await res.json();
+    if (data.success) {
+      showToast(translations[currentLang].msgFbPosted, "success");
+    } else {
+      showToast("Facebook: " + (data.error || data.message), "error");
+    }
+  } catch (err) {
+    showToast("Network error: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function verifyFacebookPage() {
+  const pageId = document.getElementById("fb-page-id")?.value.trim();
+  const token = document.getElementById("fb-page-token")?.value.trim();
+  const statusEl = document.getElementById("fb-verify-status");
+  const btn = document.getElementById("btn-verify-fb");
+  
+  if (!pageId || !token) {
+    showToast(currentLang === "km" ? "សូមបញ្ចូល Facebook Page ID និង Access Token ជាមុនសិន!" : "Please enter Facebook Page ID and Access Token first!", "error");
+    return;
+  }
+  
+  if (btn) btn.disabled = true;
+  if (statusEl) statusEl.textContent = currentLang === "km" ? "កំពុងផ្ទៀងផ្ទាត់..." : "Verifying...";
+  
+  try {
+    const res = await fetch("/api/facebook/verify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        facebook_page_id: pageId,
+        facebook_access_token: token
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (statusEl) {
+        statusEl.textContent = "✅ " + data.message;
+        statusEl.style.color = "#34d399";
+      }
+      showToast(translations[currentLang].msgFbVerified, "success");
+    } else {
+      if (statusEl) {
+        statusEl.textContent = "❌ " + data.message;
+        statusEl.style.color = "#ef4444";
+      }
+      showToast(data.message, "error");
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = "❌ Error: " + err.message;
+      statusEl.style.color = "#ef4444";
+    }
+  } finally {
+    if (btn) btn.disabled = false;
   }
 }
 
