@@ -5,6 +5,13 @@
  * 4 Dedicated Tabs: Generator, History, Auto-Scheduler, Settings
  */
 
+// Safe text setter helper (global scope)
+function setTxt(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+window.setTxt = setTxt;
+
 // ==========================================
 // Translation Dictionary (Khmer ↔ English)
 // ==========================================
@@ -470,12 +477,6 @@ function applyLanguage(lang) {
   
   // Set html lang
   document.documentElement.lang = lang;
-  
-  // Safe setter
-  const setTxt = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
-  };
 
   // Header
   setTxt("app-title", t.appTitle);
@@ -969,26 +970,25 @@ async function runBatchGeneration() {
   const btnRun = document.getElementById("btn-run-batch");
   const t = translations[currentLang] || translations.km;
   
-  if (btnRun) btnRun.disabled = true;
-  setTxt("btn-run-text", t.btnRunning || "🚀 កំពុងដំណើរការ...");
-  
-  const progContainer = document.getElementById("progress-container");
-  const progFill = document.getElementById("progress-fill");
-  const progStatus = document.getElementById("progress-status-text");
-  const progPercent = document.getElementById("progress-percent-text");
-  
-  if (progContainer) progContainer.classList.remove("hidden");
-  if (progFill) progFill.style.width = "15%";
-  if (progStatus) progStatus.textContent = currentLang === "km" ? `កំពុងទាក់ទង Gemini AI បង្កើតស្គ្រីបទាំង ${currentTopicCount}...` : `Calling Gemini AI for ${currentTopicCount} scripts...`;
-  if (progPercent) progPercent.textContent = "15%";
-  
-  appendLog(`[${new Date().toLocaleTimeString()}] ${currentLang === 'km' ? 'ចាប់ផ្តើមដំណើរការបង្កើតស្គ្រីប...' : 'Starting script automation...'}`, "system");
-  appendLog(`[Format] ${format} | [Tone] ${tone}`, "info");
-  
-  const autoVideo = document.getElementById("gen-auto-video")?.checked ?? true;
-  const autoApproval = document.getElementById("gen-auto-approval")?.checked ?? true;
-  
   try {
+    if (btnRun) btnRun.disabled = true;
+    setTxt("btn-run-text", t.btnRunning || "🚀 កំពុងដំណើរការ...");
+    
+    const progContainer = document.getElementById("progress-container");
+    const progFill = document.getElementById("progress-fill");
+    const progStatus = document.getElementById("progress-status-text");
+    const progPercent = document.getElementById("progress-percent-text");
+    
+    if (progContainer) progContainer.classList.remove("hidden");
+    if (progFill) progFill.style.width = "15%";
+    if (progStatus) progStatus.textContent = currentLang === "km" ? `កំពុងទាក់ទង Gemini AI បង្កើតស្គ្រីបទាំង ${currentTopicCount}...` : `Calling Gemini AI for ${currentTopicCount} scripts...`;
+    if (progPercent) progPercent.textContent = "15%";
+    
+    appendLog(`[${new Date().toLocaleTimeString()}] ${currentLang === 'km' ? 'ចាប់ផ្តើមដំណើរការបង្កើតស្គ្រីប...' : 'Starting script automation...'}`, "system");
+    appendLog(`[Format] ${format} | [Tone] ${tone}`, "info");
+    
+    const autoVideo = document.getElementById("gen-auto-video")?.checked ?? true;
+    const autoApproval = document.getElementById("gen-auto-approval")?.checked ?? true;
     // Step 1: Generate AI scripts in parallel (~1.5s)
     const res = await fetch("/api/generate-batch", {
       method: "POST",
@@ -1103,7 +1103,7 @@ async function runBatchGeneration() {
     showToast("Automation failed: " + err.message, "error");
   } finally {
     if (btnRun) btnRun.disabled = false;
-    setTxt("btn-run-text", t.btnRun || "ចាប់ផ្តើមបង្កើតស្គ្រីប និងដំណើរការស្វ័យប្រវត្តិ");
+    setTxt("btn-run-text", t.btnRun || "ចាប់ផ្តើមបង្កើតស្គ្រីប & ផលិតវីដេអូ Reels");
   }
 }
 
