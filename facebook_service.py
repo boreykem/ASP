@@ -8,6 +8,7 @@ Meta Graph API Service for Facebook Page Automation
 
 import requests
 import json
+import time
 
 GRAPH_API_VERSION = "v19.0"
 GRAPH_API_BASE = f"https://graph.facebook.com/{GRAPH_API_VERSION}"
@@ -117,3 +118,33 @@ def get_user_pages(access_token):
         return False, err.get("message", f"HTTP {res.status_code}"), []
     except Exception as e:
         return False, str(e), []
+
+def broadcast_to_pages(pages, message, delay=0.5):
+    """
+    បង្ហោះអត្ថបទ ឬស្គ្រីបចូលទៅកាន់ Facebook Pages ច្រើនក្នុងពេលតែមួយ (Multi-page broadcast)
+    pages: list of dicts [{"id": page_id, "name": page_name, "access_token": token}]
+    """
+    if not pages or not isinstance(pages, list):
+        return False, "គ្មាន Facebook Pages ត្រូវបានជ្រើសរើសឡើយ", []
+        
+    results = []
+    success_count = 0
+    
+    for idx, p in enumerate(pages):
+        p_id = p.get("id")
+        p_name = p.get("name", p_id)
+        p_token = p.get("access_token")
+        
+        ok, msg = post_to_page(p_id, p_token, message)
+        if ok:
+            success_count += 1
+            results.append({"id": p_id, "name": p_name, "success": True, "message": msg})
+        else:
+            results.append({"id": p_id, "name": p_name, "success": False, "message": msg})
+            
+        if idx < len(pages) - 1:
+            time.sleep(delay)
+            
+    summary = f"បានបង្ហោះជោគជ័យ {success_count}/{len(pages)} Facebook Pages!"
+    return (success_count > 0), summary, results
+

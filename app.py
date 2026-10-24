@@ -31,6 +31,8 @@ DEFAULT_CONFIG = {
     "facebook_page_id": "",
     "facebook_access_token": "",
     "facebook_auto_post": False,
+    "facebook_all_pages": False,
+    "facebook_selected_pages": [],
     "language": "km",
     "format": "NotebookLM Video Overview (Explainer Video ៥+ នាទី | សំឡេងខ្មែរ + ស្លាយ/CC អង់គ្លេស)",
     "tone": "ទាក់ទាញ & រំភើប (Hook & Catchy)",
@@ -114,10 +116,14 @@ def run_daily_automation(cfg):
             tg_text = f"📝 *ស្គ្រីបទី {idx+1}: {topic}*\n\n{content}"
             telegram_service.send_message(bot_token, chat_id, tg_text)
             
-            # Auto-post to Facebook Page if configured
-            if fb_auto and fb_page_id and fb_token:
-                fb_msg = f"🎬 {topic}\n\n{content}"
-                facebook_service.post_to_page(fb_page_id, fb_token, fb_msg)
+            # Auto-post to Facebook Page(s) if configured
+            if fb_auto:
+                pages_to_post = cfg.get("facebook_selected_pages") or []
+                if not pages_to_post and fb_page_id and fb_token:
+                    pages_to_post = [{"id": fb_page_id, "name": "Primary Page", "access_token": fb_token}]
+                if pages_to_post:
+                    fb_msg = f"🎬 {topic}\n\n{content}"
+                    facebook_service.broadcast_to_pages(pages_to_post, fb_msg)
                 
             success_count += 1
         time.sleep(2)
@@ -268,12 +274,19 @@ def api_generate_batch():
         tg_text = f"📝 *ស្គ្រីបទី {idx+1}: {topic}*\n\n{content}"
         tg_ok, tg_status = telegram_service.send_message(bot_token, chat_id, tg_text)
         
-        # Post to Facebook Page if enabled
+        # Post to Facebook Page(s) if enabled
         fb_ok = False
         fb_status = "Not configured"
-        if fb_auto and fb_page_id and fb_token:
-            fb_msg = f"🎬 {topic}\n\n{content}"
-            fb_ok, fb_status = facebook_service.post_to_page(fb_page_id, fb_token, fb_msg)
+        if fb_auto:
+            pages_to_post = cfg.get("facebook_selected_pages") or []
+            if not pages_to_post and fb_page_id and fb_token:
+                pages_to_post = [{"id": fb_page_id, "name": "Primary Page", "access_token": fb_token}]
+            if pages_to_post:
+                fb_msg = f"🎬 {topic}\n\n{content}"
+                if len(pages_to_post) == 1:
+                    fb_ok, fb_status = facebook_service.post_to_page(pages_to_post[0]["id"], pages_to_post[0]["access_token"], fb_msg)
+                else:
+                    fb_ok, fb_status, _ = facebook_service.broadcast_to_pages(pages_to_post, fb_msg)
             
         results.append({
             "index": idx + 1,
@@ -329,14 +342,22 @@ def api_post_facebook_script(script_id):
         return jsonify({"success": False, "error": "Script not found"}), 404
         
     cfg = load_config()
+    pages_to_post = cfg.get("facebook_selected_pages") or []
     page_id = cfg.get("facebook_page_id")
     access_token = cfg.get("facebook_access_token")
     
-    if not page_id or not access_token:
-        return jsonify({"success": False, "error": "Facebook Page ID and Access Token are not configured in Settings"}), 400
+    if not pages_to_post and page_id and access_token:
+        pages_to_post = [{"id": page_id, "name": "Primary Page", "access_token": access_token}]
+        
+    if not pages_to_post:
+        return jsonify({"success": False, "error": "Facebook Pages are not configured in Settings"}), 400
         
     message = f"🎬 {script['topic']}\n\n{script['content']}"
-    ok, msg = facebook_service.post_to_page(page_id, access_token, message)
+    if len(pages_to_post) == 1:
+        ok, msg = facebook_service.post_to_page(pages_to_post[0]["id"], pages_to_post[0]["access_token"], message)
+    else:
+        ok, msg, _ = facebook_service.broadcast_to_pages(pages_to_post, message)
+        
     return jsonify({"success": ok, "message": msg})
 
 @app.route("/api/facebook/verify", methods=["POST"])

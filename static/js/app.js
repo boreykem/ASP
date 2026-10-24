@@ -39,7 +39,12 @@ const translations = {
     btnVerifyFb: "ផ្ទៀងផ្ទាត់ Facebook Page",
     btnPostFacebook: "Post Facebook",
     btnFetchFbPages: "ទាញយក Pages របស់ខ្ញុំ",
-    lblFbPageSelect: "ជ្រើសរើស Page ដែលចង់ Post (Select Page):",
+    lblFbPageSelect: "ឬជ្រើសរើស Page ជាក់លាក់ណាមួយ (Select Single Page):",
+    fbBroadcastAllTitle: "📢 បង្ហោះចូលគ្រប់ Pages ទាំងអស់ (Broadcast to All Pages)",
+    fbBroadcastAllDesc: "ពេលបង្កើតស្គ្រីប វានឹងបង្ហោះចូលគ្រប់ Facebook Pages ទាំងអស់ដែលបានជ្រើសរើសក្នុងពេលតែមួយ។",
+    lblPagesList: "បញ្ជី Facebook Pages របស់អ្នក:",
+    btnSelectAll: "✓ ជ្រើសរើសទាំងអស់",
+    btnDeselectAll: "✕ ដោះទាំងអស់",
     msgPagesLoaded: "បានទាញយក Pages ទាំងអស់ជោគជ័យ!",
     msgFbPosted: "បានបង្ហោះឡើង Facebook Page ជោគជ័យ!",
     msgFbVerified: "បានភ្ជាប់ទៅកាន់ Facebook Page ជោគជ័យ!",
@@ -135,7 +140,12 @@ const translations = {
     btnVerifyFb: "Verify Facebook Page",
     btnPostFacebook: "Post to Facebook",
     btnFetchFbPages: "Fetch My Pages",
-    lblFbPageSelect: "Select Page to Post:",
+    lblFbPageSelect: "Or Select a Single Page:",
+    fbBroadcastAllTitle: "📢 Broadcast to All Pages",
+    fbBroadcastAllDesc: "When a script is generated, publish it to all selected Facebook Pages simultaneously.",
+    lblPagesList: "Your Facebook Pages List:",
+    btnSelectAll: "✓ Select All",
+    btnDeselectAll: "✕ Deselect All",
     msgPagesLoaded: "Loaded all Facebook Pages successfully!",
     msgFbPosted: "Successfully posted to Facebook Page!",
     msgFbVerified: "Successfully connected to Facebook Page!",
@@ -488,6 +498,11 @@ function applyLanguage(lang) {
   setTxt("lbl-fb-page-id", t.lblFbPageId);
   setTxt("lbl-fb-page-token", t.lblFbPageToken);
   setTxt("lbl-fb-page-select", t.lblFbPageSelect);
+  setTxt("fb-broadcast-all-title", t.fbBroadcastAllTitle);
+  setTxt("fb-broadcast-all-desc", t.fbBroadcastAllDesc);
+  setTxt("lbl-pages-list", t.lblPagesList);
+  setTxt("btn-select-all-pages", t.btnSelectAll);
+  setTxt("btn-deselect-all-pages", t.btnDeselectAll);
   setTxt("btn-fetch-fb-pages-text", t.btnFetchFbPages);
   setTxt("btn-verify-fb-text", t.btnVerifyFb);
   setTxt("btn-post-facebook-text", t.btnPostFacebook);
@@ -665,6 +680,13 @@ function setupEventListeners() {
   const fbSelect = document.getElementById("fb-page-select");
   if (fbSelect) fbSelect.addEventListener("change", handleFacebookPageSelect);
   
+  document.getElementById("btn-select-all-pages")?.addEventListener("click", () => {
+    document.querySelectorAll(".fb-page-cb").forEach(cb => cb.checked = true);
+  });
+  document.getElementById("btn-deselect-all-pages")?.addEventListener("click", () => {
+    document.querySelectorAll(".fb-page-cb").forEach(cb => cb.checked = false);
+  });
+  
   document.getElementById("btn-delete-script").addEventListener("click", deleteSelectedScript);
   
   // Format dropdown change listener
@@ -714,9 +736,16 @@ async function loadInitialConfig() {
       const fbPageId = document.getElementById("fb-page-id");
       const fbPageToken = document.getElementById("fb-page-token");
       const fbAutoPost = document.getElementById("fb-auto-post-checkbox");
+      const fbBroadcastAll = document.getElementById("fb-broadcast-all-checkbox");
       if (fbPageId) fbPageId.value = c.facebook_page_id || "";
       if (fbPageToken) fbPageToken.value = c.facebook_access_token || "";
       if (fbAutoPost) fbAutoPost.checked = !!c.facebook_auto_post;
+      if (fbBroadcastAll) fbBroadcastAll.checked = !!c.facebook_all_pages;
+      
+      if (c.facebook_selected_pages && c.facebook_selected_pages.length > 0) {
+        fbPagesCache = c.facebook_selected_pages;
+        renderPagesChecklist(fbPagesCache);
+      }
       
       if (c.format) {
         document.getElementById("video-format").value = c.format;
@@ -787,6 +816,7 @@ function clearTopics() {
 // Save Settings
 // ==========================================
 async function saveSettings() {
+  const selectedPages = getSelectedFacebookPages();
   const payload = {
     gemini_key: document.getElementById("gemini-key").value.trim(),
     bot_token: document.getElementById("bot-token").value.trim(),
@@ -794,6 +824,8 @@ async function saveSettings() {
     facebook_page_id: document.getElementById("fb-page-id")?.value.trim() || "",
     facebook_access_token: document.getElementById("fb-page-token")?.value.trim() || "",
     facebook_auto_post: document.getElementById("fb-auto-post-checkbox")?.checked || false,
+    facebook_all_pages: document.getElementById("fb-broadcast-all-checkbox")?.checked || false,
+    facebook_selected_pages: selectedPages,
     format: document.getElementById("video-format").value,
     tone: document.getElementById("video-tone").value,
     topics: getTopicValues()
@@ -1130,6 +1162,51 @@ async function verifyFacebookPage() {
 
 let fbPagesCache = [];
 
+function renderPagesChecklist(pages, selectedIds = []) {
+  const container = document.getElementById("fb-pages-container");
+  const checklist = document.getElementById("fb-pages-checklist");
+  const countEl = document.getElementById("fb-pages-count");
+  if (!container || !checklist) return;
+  
+  if (!pages || pages.length === 0) {
+    container.classList.add("hidden");
+    return;
+  }
+  
+  container.classList.remove("hidden");
+  if (countEl) countEl.textContent = pages.length;
+  checklist.innerHTML = "";
+  
+  pages.forEach(p => {
+    const isChecked = selectedIds.length === 0 || selectedIds.includes(p.id);
+    const item = document.createElement("label");
+    item.className = "page-check-item";
+    item.innerHTML = `
+      <input type="checkbox" class="fb-page-cb" data-id="${p.id}" ${isChecked ? "checked" : ""}>
+      <span class="page-name">${p.name}</span>
+      <span class="page-id-badge">ID: ${p.id}</span>
+    `;
+    checklist.appendChild(item);
+  });
+}
+
+function getSelectedFacebookPages() {
+  const checkboxes = document.querySelectorAll(".fb-page-cb:checked");
+  const selected = [];
+  checkboxes.forEach(cb => {
+    const id = cb.dataset.id;
+    const page = fbPagesCache.find(p => p.id === id);
+    if (page) {
+      selected.push({
+        id: page.id,
+        name: page.name,
+        access_token: page.access_token
+      });
+    }
+  });
+  return selected;
+}
+
 async function fetchFacebookPages() {
   const token = document.getElementById("fb-page-token")?.value.trim();
   const btn = document.getElementById("btn-fetch-fb-pages");
@@ -1156,6 +1233,8 @@ async function fetchFacebookPages() {
     const data = await res.json();
     if (data.success && data.pages && data.pages.length > 0) {
       fbPagesCache = data.pages;
+      renderPagesChecklist(fbPagesCache);
+      
       selectEl.innerHTML = `<option value="">-- ${currentLang === 'km' ? 'សូមជ្រើសរើស Page (' + data.pages.length + ' Pages)' : 'Choose a Page (' + data.pages.length + ' Pages)'} --</option>`;
       data.pages.forEach(p => {
         const opt = document.createElement("option");

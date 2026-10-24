@@ -992,3 +992,52 @@ input:checked + .slider:before {
   margin: 0;
 }
 
+/* Multi-Page Checklist Box */
+.pages-checklist-box {
+  max-height: 220px;
+  overflow-y: auto;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  padding: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.page-check-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 0.88rem;
+  color: var(--text-main);
+}
+
+.page-check-item:hover {
+  background: rgba(99, 102, 241, 0.16);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.page-check-item input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: #6366f1;
+  width: 16px;
+  height: 16px;
+}
+
+.page-check-item .page-name {
+  font-weight: 500;
+}
+
+.page-check-item .page-id-badge {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: auto;
+  font-family: monospace;
+}
+

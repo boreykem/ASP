@@ -457,11 +457,37 @@
             <span id="fb-verify-status" class="text-muted" style="font-size: 0.85rem;"></span>
           </div>
 
-          <!-- Select Page Dropdown (Auto-populated from Token) -->
-          <div class="form-group" id="fb-page-select-group">
-            <label for="fb-page-select" id="lbl-fb-page-select">ជ្រើសរើស Page ដែលចង់ Post (Select Page):</label>
+          <!-- Multi-Page Broadcast Options -->
+          <div class="scheduler-toggle-box" style="margin-top: 0.5rem;">
+            <div>
+              <h4 id="fb-broadcast-all-title">📢 បង្ហោះចូលគ្រប់ Pages ទាំងអស់ (Broadcast to All Pages)</h4>
+              <p class="text-muted" id="fb-broadcast-all-desc">ពេលបង្កើតស្គ្រីប វានឹងបង្ហោះចូលគ្រប់ Facebook Pages ទាំងអស់ដែលបានជ្រើសរើសក្នុងពេលតែមួយ។</p>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="fb-broadcast-all-checkbox">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <!-- Multi-Page Checklist Container (Auto-populated from Token) -->
+          <div id="fb-pages-container" class="hidden" style="margin-top: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <strong id="lbl-pages-list" style="font-size: 0.9rem;">បញ្ជី Facebook Pages របស់អ្នក (<span id="fb-pages-count">0</span> Pages):</strong>
+              <div style="display: flex; gap: 0.4rem;">
+                <button type="button" class="btn-outline-sm" id="btn-select-all-pages">✓ ជ្រើសរើសទាំងអស់</button>
+                <button type="button" class="btn-outline-sm" id="btn-deselect-all-pages">✕ ដោះទាំងអស់</button>
+              </div>
+            </div>
+            <div id="fb-pages-checklist" class="pages-checklist-box">
+              <!-- Dynamically populated checkboxes -->
+            </div>
+          </div>
+
+          <!-- Single Page Select Dropdown -->
+          <div class="form-group" id="fb-single-page-group">
+            <label for="fb-page-select" id="lbl-fb-page-select">ឬជ្រើសរើស Page ជាក់លាក់ណាមួយ (Select Single Page):</label>
             <select id="fb-page-select" class="form-control">
-              <option value="">-- ចុច 'ទាញយក Pages' ឬវាយបញ្ចូល Page ID ខាងក្រោម --</option>
+              <option value="">-- ចុច 'ទាញយក Pages' ឬជ្រើសរើសពីបញ្ជី --</option>
             </select>
           </div>
 
