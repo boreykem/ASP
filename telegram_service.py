@@ -98,26 +98,35 @@ def send_video_approval_card(bot_token, chat_id, title, video_url, description, 
     - [ ❌ Reject ]
     """
     import json
+    import html
     bot_token = (bot_token or "").strip().strip("'").strip('"')
     chat_id = str(chat_id or "").strip()
     
     if not bot_token or not chat_id:
         return False, "Bot Token and Chat ID are required"
         
+    if not video_url.startswith("http://") and not video_url.startswith("https://"):
+        full_video_url = f"{web_base_url}{video_url if video_url.startswith('/') else '/' + video_url}"
+    else:
+        full_video_url = video_url
+
     publish_url = f"{web_base_url}/api/approve/{approval_id}?action=publish"
     reject_url = f"{web_base_url}/api/approve/{approval_id}?action=reject"
     
-    clean_desc = (description or "")[:400]
-    if len(description or "") > 400:
-        clean_desc += "..."
+    safe_title = html.escape(str(title or "Reels Video"))
+    raw_desc = str(description or "")[:350]
+    if len(str(description or "")) > 350:
+        raw_desc += "..."
+    safe_desc = html.escape(raw_desc)
+    safe_video_url = html.escape(full_video_url)
         
     text = (
-        f"🎬 *[វីដេអូថ្មីរួចរាល់សម្រាប់ពិនិត្យ & APPROVE]*\n\n"
-        f"📌 *ប្រធានបទ:* {title}\n"
-        f"⏱ *ទម្រង់:* Reels / TikTok / Shorts (9:16 Vertical HD)\n\n"
-        f"📝 *Caption:*\n{clean_desc}\n\n"
-        f"🔗 *មើលវីដេអូ:* {video_url}\n\n"
-        f"👇 *សូមពិនិត្យមើលវីដេអូរួចចុចប៊ូតុងខាងក្រោមដើម្បីសម្រេចចិត្ត៖*"
+        f"🎬 <b>[វីដេអូថ្មីរួចរាល់សម្រាប់ពិនិត្យ & APPROVE]</b>\n\n"
+        f"📌 <b>ប្រធានបទ:</b> {safe_title}\n"
+        f"⏱ <b>ទម្រង់:</b> Reels / TikTok / Shorts (9:16 Vertical HD)\n\n"
+        f"📝 <b>Caption:</b>\n{safe_desc}\n\n"
+        f"🔗 <b>មើលវីដេអូ:</b> <a href=\"{safe_video_url}\">{safe_video_url}</a>\n\n"
+        f"👇 <b>សូមពិនិត្យមើលវីដេអូរួចចុចប៊ូតុងខាងក្រោមដើម្បីសម្រេចចិត្ត៖</b>"
     )
     
     reply_markup = {
@@ -126,7 +135,7 @@ def send_video_approval_card(bot_token, chat_id, title, video_url, description, 
                 {"text": "✅ Approve & បង្ហោះចូល Facebook ២៣ Pages", "url": publish_url}
             ],
             [
-                {"text": "🎬 Watch Video Preview", "url": video_url},
+                {"text": "🎬 Watch Video Preview", "url": full_video_url},
                 {"text": "❌ Reject (កុំបង្ហោះ)", "url": reject_url}
             ]
         ]
@@ -136,7 +145,7 @@ def send_video_approval_card(bot_token, chat_id, title, video_url, description, 
     payload = {
         "chat_id": chat_id,
         "text": text,
-        "parse_mode": "Markdown",
+        "parse_mode": "HTML",
         "reply_markup": reply_markup
     }
     
@@ -144,8 +153,9 @@ def send_video_approval_card(bot_token, chat_id, title, video_url, description, 
         res = requests.post(url, json=payload, timeout=20)
         if res.status_code == 200:
             return True, "Approval card sent to Telegram successfully"
-        # fallback without markdown if error
+        # fallback without parse_mode if error
         payload.pop("parse_mode", None)
+        payload["text"] = f"[វីដេអូថ្មី] {title}\nមើលវីដេអូ: {full_video_url}\n{raw_desc}"
         retry_res = requests.post(url, json=payload, timeout=20)
         if retry_res.status_code == 200:
             return True, "Approval card sent to Telegram (plain-text)"

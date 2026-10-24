@@ -246,6 +246,7 @@ def api_get_categories():
 
 @app.route("/api/generate-batch", methods=["POST"])
 def api_generate_batch():
+    import concurrent.futures
     data = request.json or {}
     cfg = load_config()
     key = data.get("gemini_key") or cfg.get("gemini_key")
@@ -283,9 +284,22 @@ def api_generate_batch():
     auto_video = data.get("auto_video", True)
     auto_approval = data.get("auto_approval", True)
     
-    results = []
-    for idx, topic in enumerate(clean_topics[:5]):
+    # Generate scripts concurrently using ThreadPoolExecutor for lightning speed (~1.5-2s total)
+    def _gen_single_script(idx, topic):
         ok, content, model = ai_service.generate_script(key, topic, platform=platform, tone=tone, lang=lang)
+        return idx, topic, ok, content, model
+
+    raw_items = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(_gen_single_script, i, t) for i, t in enumerate(clean_topics[:5])]
+        for f in concurrent.futures.as_completed(futures):
+            raw_items.append(f.result())
+            
+    # Sort back by original index
+    raw_items.sort(key=lambda x: x[0])
+    
+    results = []
+    for idx, topic, ok, content, model in raw_items:
         if not ok:
             results.append({
                 "index": idx + 1,
@@ -295,59 +309,9 @@ def api_generate_batch():
             })
             continue
             
-        # Save to DB
+        # Save to Database
         script_id, date_str = database.save_script(topic, content)
         
-        # 1. Video Output Engine (Topic-aware Reels 9:16)
-        vid_filename = None
-        vid_url = None
-        if auto_video:
-            try:
-                import video_engine
-                vid_path = video_engine.create_reels_video(script_text=content, topic=topic)
-                vid_filename = os.path.basename(vid_path)
-                vid_url = f"/static/videos/{vid_filename}"
-            except Exception as e_v:
-                print(f"[!] Auto-video error for topic '{topic}': {e_v}")
-        
-        # 2. Telegram Workflow: Interactive Approval Card with Video Link OR Script text
-        tg_ok = False
-        tg_status = "Pending"
-        if auto_approval and vid_url and bot_token and chat_id:
-            try:
-                approval_id = database.create_video_approval(topic, content, vid_url, script_id=script_id)
-                host_url = request.host_url.rstrip("/")
-                web_base_url = "https://asp-ac.vercel.app" if ("localhost" in host_url or "127.0.0.1" in host_url) else host_url
-                tg_ok, tg_status = telegram_service.send_video_approval_card(
-                    bot_token=bot_token,
-                    chat_id=chat_id,
-                    title=topic,
-                    video_url=vid_url,
-                    description=content,
-                    approval_id=approval_id,
-                    web_base_url=web_base_url
-                )
-            except Exception as e_ap:
-                tg_ok = False
-                tg_status = str(e_ap)
-        elif bot_token and chat_id:
-            tg_text = f"📝 *ស្គ្រីបទី {idx+1}: {topic}*\n\n{content}"
-            tg_ok, tg_status = telegram_service.send_message(bot_token, chat_id, tg_text)
-            
-        # 3. Direct Facebook Posting (only if auto_approval is OFF and fb_auto is explicitly ON)
-        fb_ok = False
-        fb_status = "Waiting Approval" if auto_approval else "Not configured"
-        if fb_auto and not auto_approval:
-            pages_to_post = cfg.get("facebook_selected_pages") or []
-            if not pages_to_post and fb_page_id and fb_token:
-                pages_to_post = [{"id": fb_page_id, "name": "Primary Page", "access_token": fb_token}]
-            if pages_to_post:
-                fb_msg = f"🎬 {topic}\n\n{content}"
-                if len(pages_to_post) == 1:
-                    fb_ok, fb_status = facebook_service.post_to_page(pages_to_post[0]["id"], pages_to_post[0]["access_token"], fb_msg)
-                else:
-                    fb_ok, fb_status, _ = facebook_service.broadcast_to_pages(pages_to_post, fb_msg)
-            
         results.append({
             "index": idx + 1,
             "id": script_id,
@@ -355,16 +319,22 @@ def api_generate_batch():
             "success": True,
             "model": model,
             "date": date_str,
-            "video_url": vid_url,
-            "video_filename": vid_filename,
-            "telegram_sent": tg_ok,
-            "telegram_status": tg_status,
-            "facebook_posted": fb_ok,
-            "facebook_status": fb_status,
+            "video_url": None,
+            "video_filename": None,
+            "telegram_sent": False,
+            "telegram_status": "Ready for Video",
+            "facebook_posted": False,
+            "facebook_status": "Waiting Approval" if auto_approval else "Not configured",
             "content": content
         })
         
-    return jsonify({"success": True, "results": results, "topics_used": clean_topics})
+    return jsonify({
+        "success": True,
+        "results": results,
+        "topics_used": clean_topics,
+        "auto_video": auto_video,
+        "auto_approval": auto_approval
+    })
 
 @app.route("/api/history", methods=["GET"])
 def api_get_history():
@@ -492,6 +462,7 @@ def api_generate_video():
     voice = data.get("voice", "km-KH-PisethNeural")
     b_roll = data.get("b_roll", "auto")
     topic = data.get("topic", "")
+    auto_approval = data.get("auto_approval", True)
     
     if script_id:
         s = database.get_script_by_id(script_id)
@@ -511,11 +482,46 @@ def api_generate_video():
         )
         filename = os.path.basename(vid_path)
         video_url = f"/static/videos/{filename}"
+        
+        # Update database script record with video_url
+        if script_id:
+            try:
+                database.update_script_video(script_id, video_url)
+            except Exception:
+                pass
+                
+        # Send interactive approval card to Telegram bot
+        tg_ok = False
+        tg_status = "Skipped"
+        cfg = load_config()
+        bot_token = cfg.get("bot_token")
+        chat_id = cfg.get("chat_id")
+        
+        if auto_approval and bot_token and chat_id:
+            try:
+                approval_id = database.create_video_approval(topic or "Reels Video", script_text, video_url, script_id=script_id)
+                host_url = request.host_url.rstrip("/")
+                web_base_url = "https://asp-ac.vercel.app" if ("localhost" in host_url or "127.0.0.1" in host_url) else host_url
+                tg_ok, tg_status = telegram_service.send_video_approval_card(
+                    bot_token=bot_token,
+                    chat_id=chat_id,
+                    title=topic or "Reels Video",
+                    video_url=video_url,
+                    description=script_text,
+                    approval_id=approval_id,
+                    web_base_url=web_base_url
+                )
+            except Exception as e_tg:
+                tg_ok = False
+                tg_status = str(e_tg)
+                
         return jsonify({
             "success": True,
             "message": "បានផលិតវីដេអូ Reels ជោគជ័យ!",
             "video_url": video_url,
-            "filename": filename
+            "filename": filename,
+            "telegram_sent": tg_ok,
+            "telegram_status": tg_status
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500

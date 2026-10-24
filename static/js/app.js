@@ -896,32 +896,27 @@ function getTopicValues() {
 // Batch Generation & Telegram Broadcast
 // ==========================================
 async function runBatchGeneration() {
-  const geminiKey = document.getElementById("gemini-key").value.trim() || DEFAULT_GEMINI_KEY;
-  const botToken = document.getElementById("bot-token").value.trim() || DEFAULT_BOT_TOKEN;
-  const chatId = document.getElementById("chat-id").value.trim() || DEFAULT_CHAT_ID;
-  const format = document.getElementById("video-format").value;
-  const tone = document.getElementById("video-tone").value;
+  const geminiKey = document.getElementById("gemini-key")?.value?.trim() || DEFAULT_GEMINI_KEY;
+  const botToken = document.getElementById("bot-token")?.value?.trim() || DEFAULT_BOT_TOKEN;
+  const chatId = document.getElementById("chat-id")?.value?.trim() || DEFAULT_CHAT_ID;
+  const format = document.getElementById("video-format")?.value || "TikTok";
+  const tone = document.getElementById("video-tone")?.value || "ទាក់ទាញ";
   let topics = getTopicValues();
   const btnRun = document.getElementById("btn-run-batch");
-  const t = translations[currentLang];
+  const t = translations[currentLang] || translations.km;
   
-  // Make sure fields reflect active credentials
-  document.getElementById("gemini-key").value = geminiKey;
-  document.getElementById("bot-token").value = botToken;
-  document.getElementById("chat-id").value = chatId;
-  
-  btnRun.disabled = true;
-  document.getElementById("btn-run-text").textContent = t.btnRunning;
+  if (btnRun) btnRun.disabled = true;
+  setTxt("btn-run-text", t.btnRunning || "🚀 កំពុងដំណើរការ...");
   
   const progContainer = document.getElementById("progress-container");
   const progFill = document.getElementById("progress-fill");
   const progStatus = document.getElementById("progress-status-text");
   const progPercent = document.getElementById("progress-percent-text");
   
-  progContainer.classList.remove("hidden");
-  progFill.style.width = "10%";
-  progStatus.textContent = currentLang === "km" ? "កំពុងចាប់ផ្តើម..." : "Starting automation...";
-  progPercent.textContent = "10%";
+  if (progContainer) progContainer.classList.remove("hidden");
+  if (progFill) progFill.style.width = "15%";
+  if (progStatus) progStatus.textContent = currentLang === "km" ? "កំពុងទាក់ទង Gemini AI បង្កើតស្គ្រីបទាំង ៥..." : "Calling Gemini AI for 5 scripts...";
+  if (progPercent) progPercent.textContent = "15%";
   
   appendLog(`[${new Date().toLocaleTimeString()}] ${currentLang === 'km' ? 'ចាប់ផ្តើមដំណើរការបង្កើតស្គ្រីប...' : 'Starting script automation...'}`, "system");
   appendLog(`[Format] ${format} | [Tone] ${tone}`, "info");
@@ -930,6 +925,7 @@ async function runBatchGeneration() {
   const autoApproval = document.getElementById("gen-auto-approval")?.checked ?? true;
   
   try {
+    // Step 1: Generate 5 AI scripts in parallel (~1.5 - 2.5s)
     const res = await fetch("/api/generate-batch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -941,61 +937,108 @@ async function runBatchGeneration() {
         tone: tone,
         topics: topics,
         lang: currentLang,
-        auto_video: autoVideo,
+        auto_video: false, // Orchestrated step-by-step to prevent Vercel 10s timeouts
         auto_approval: autoApproval
       })
     });
     
+    if (!res.ok) {
+      throw new Error(`Server returned HTTP ${res.status}`);
+    }
+    
     const data = await res.json();
-    if (data.success && data.results) {
-      const results = data.results;
-      const total = results.length;
-      let successCount = 0;
+    if (!data.success || !data.results) {
+      throw new Error(data.error || "Generation failed");
+    }
+    
+    const results = data.results;
+    const total = results.length;
+    
+    // If auto topics were generated, update the inputs so user sees them
+    if (data.topics_used && Array.isArray(data.topics_used)) {
+      data.topics_used.forEach((tp, i) => {
+        const el = document.getElementById(`topic-${i+1}`);
+        if (el) el.value = tp;
+      });
+    }
+    
+    // Log generated scripts
+    results.forEach((r) => {
+      if (r.success) {
+        appendLog(`[Script ${r.index}] 📝 ${r.topic}`, "info");
+        if (r.model) appendLog(`   (Model: ${r.model})`, "model");
+      } else {
+        appendLog(`[Script ${r.index}] ❌ ${r.topic} - ${r.error}`, "error");
+      }
+    });
+    
+    if (progFill) progFill.style.width = autoVideo ? "35%" : "100%";
+    if (progPercent) progPercent.textContent = autoVideo ? "35%" : "100%";
+    if (progStatus) progStatus.textContent = currentLang === "km" ? "បង្កើតស្គ្រីបទាំង ៥ រួចរាល់!" : "5 scripts generated!";
+    
+    // Step 2: If autoVideo is checked, render videos step-by-step (2-3s each, never hangs)
+    if (autoVideo) {
+      appendLog(`[${new Date().toLocaleTimeString()}] 🎬 ${currentLang === 'km' ? 'កំពុងចាប់ផ្តើមផលិតវីដេអូ Reels 9:16 និងផ្ញើកាត Telegram...' : 'Creating Reels videos & sending Telegram approval cards...'}`, "system");
       
-      // If auto topics were generated, update the inputs so user sees them
-      if (data.topics_used && Array.isArray(data.topics_used)) {
-        data.topics_used.forEach((tp, i) => {
-          const el = document.getElementById(`topic-${i+1}`);
-          if (el) el.value = tp;
-        });
+      const successfulScripts = results.filter(r => r.success);
+      let videosDone = 0;
+      
+      for (let i = 0; i < successfulScripts.length; i++) {
+        const script = successfulScripts[i];
+        const stepPct = 35 + Math.round(((i + 1) / successfulScripts.length) * 65);
+        if (progFill) progFill.style.width = `${stepPct}%`;
+        if (progPercent) progPercent.textContent = `${stepPct}%`;
+        if (progStatus) progStatus.textContent = currentLang === "km" 
+          ? `កំពុងផលិតវីដេអូ Reels ${i + 1}/${successfulScripts.length}...`
+          : `Rendering Reels video ${i + 1}/${successfulScripts.length}...`;
+          
+        appendLog(`[Video ${i + 1}/${successfulScripts.length}] 🎬 ${currentLang === 'km' ? 'កំពុង Render វីដេអូកម្រិត 1080x1920' : 'Rendering 1080x1920 HD'}: "${script.topic}"...`, "info");
+        
+        try {
+          const vRes = await fetch("/api/video/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              script_id: script.id,
+              script_text: script.content,
+              topic: script.topic,
+              auto_approval: autoApproval
+            })
+          });
+          
+          const vData = await vRes.json();
+          if (vData.success) {
+            videosDone++;
+            appendLog(`   ✅ ${currentLang === 'km' ? 'វីដេអូ Reels ផលិតជោគជ័យ' : 'Reels video created'}: ${vData.filename || 'reels.mp4'}`, "success");
+            if (vData.telegram_sent) {
+              appendLog(`   📲 ${currentLang === 'km' ? 'បានផ្ញើកាត Approval ចូល Telegram Bot (មានប៊ូតុង 1-Click Approve ➔ ២៣ Pages)' : 'Sent approval card to Telegram with 1-Click Approve button'}`, "success");
+            }
+          } else {
+            appendLog(`   ⚠️ ${currentLang === 'km' ? 'ផលិតវីដេអូបរាជ័យ' : 'Failed to create video'}: ${vData.error}`, "error");
+          }
+        } catch (vErr) {
+          appendLog(`   ⚠️ [Video Error]: ${vErr.message}`, "error");
+        }
       }
       
-      results.forEach((r, idx) => {
-        if (r.success) {
-          successCount++;
-          appendLog(`[Script ${r.index}] 📝 ${r.topic}`, "info");
-          if (r.model) appendLog(`   (Model: ${r.model})`, "model");
-          if (r.video_url) {
-            appendLog(`   🎬 វីដេអូ Reels 9:16: ${r.video_filename || 'ផលិតជោគជ័យ'}`, "success");
-          }
-          if (r.telegram_sent) {
-            appendLog(`   📲 ${currentLang === 'km' ? 'បានផ្ញើទៅ Telegram (មានប៊ូតុង 1-Click Approve)' : 'Sent to Telegram (with 1-Click Approve)'}`, "success");
-          } else {
-            appendLog(`   ⚠️ ${currentLang === 'km' ? 'រក្សាទុកជោគជ័យ ប៉ុន្តែផ្ញើ Telegram បរាជ័យ' : 'Saved, but Telegram delivery failed'}: ${r.telegram_status}`, "error");
-          }
-          if (r.facebook_posted) {
-            appendLog(`   📘 ${currentLang === 'km' ? 'បានបង្ហោះឡើង Facebook Page ជោគជ័យ' : 'Posted to Facebook Page successfully'}`, "success");
-          } else if (r.facebook_status && r.facebook_status !== "Not configured") {
-            appendLog(`   ℹ️ Facebook: ${r.facebook_status}`, "info");
-          }
-        } else {
-          appendLog(`[Script ${r.index}] ❌ ${r.topic} - ${r.error}`, "error");
-        }
-      });
+      if (progFill) progFill.style.width = "100%";
+      if (progPercent) progPercent.textContent = "100%";
+      if (progStatus) progStatus.textContent = currentLang === "km" ? `បញ្ចប់ជោគជ័យ (ផលិតវីដេអូបាន ${videosDone}/${successfulScripts.length})` : `Finished (${videosDone}/${successfulScripts.length} videos)`;
       
-      progFill.style.width = "100%";
-      progPercent.textContent = "100%";
-      progStatus.textContent = currentLang === "km" ? `បញ្ចប់ជោគជ័យ (${successCount}/${total})` : `Finished (${successCount}/${total})`;
-      
-      appendLog(`[${new Date().toLocaleTimeString()}] 🎉 ${currentLang === 'km' ? 'បញ្ចប់ការងារទាំងស្រុង! សូមពិនិត្យ Telegram។' : 'Batch finished! Check Telegram.'}`, "success");
-      showToast(currentLang === 'km' ? `បានបញ្ចប់! ផ្ញើបាន ${successCount}/${total} ស្គ្រីប` : `Finished! Sent ${successCount}/${total} scripts`, "success");
+      appendLog(`[${new Date().toLocaleTimeString()}] 🎉 ${currentLang === 'km' ? 'បញ្ចប់ការងារទាំងស្រុង! សូមចូលពិនិត្យ Telegram Bot ដើម្បីចុច Approve វីដេអូមុននឹងផ្សាយឡើង Facebook Pages ទាំង ២៣។' : 'Batch finished! Check Telegram to approve videos before posting to Facebook.'}`, "success");
+      showToast(currentLang === 'km' ? `បានបញ្ចប់! ផលិតវីដេអូបាន ${videosDone}/${successfulScripts.length}` : `Finished! Created ${videosDone} videos`, "success");
+    } else {
+      showToast(currentLang === 'km' ? "បង្កើតស្គ្រីបទាំង ៥ ជោគជ័យ!" : "5 scripts generated successfully!", "success");
     }
+    
+    // Refresh history so generated scripts and videos appear immediately
+    await loadHistory();
   } catch (err) {
-    appendLog(`[Error] ${err.message}`, "error");
+    appendLog(`[Error] ❌ ${err.message}`, "error");
     showToast("Automation failed: " + err.message, "error");
   } finally {
-    btnRun.disabled = false;
-    document.getElementById("btn-run-text").textContent = t.btnRun;
+    if (btnRun) btnRun.disabled = false;
+    setTxt("btn-run-text", t.btnRun || "ចាប់ផ្តើមបង្កើតស្គ្រីប និងដំណើរការស្វ័យប្រវត្តិ");
   }
 }
 
@@ -1004,6 +1047,7 @@ async function runBatchGeneration() {
 // ==========================================
 async function loadHistory() {
   const tbody = document.getElementById("history-tbody");
+  if (!tbody) return;
   tbody.innerHTML = `<tr><td colspan="4" class="text-center">${currentLang === 'km' ? 'កំពុងទាញទិន្នន័យ...' : 'Loading history...'}</td></tr>`;
   
   try {
@@ -1023,6 +1067,7 @@ async function loadHistory() {
 
 function renderHistoryTable(scripts) {
   const tbody = document.getElementById("history-tbody");
+  if (!tbody) return;
   if (scripts.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" class="text-center">${currentLang === 'km' ? 'មិនទាន់មានស្គ្រីបក្នុង Database ទេ' : 'No scripts in database yet'}</td></tr>`;
     return;
@@ -1048,7 +1093,7 @@ function renderHistoryTable(scripts) {
 }
 
 function filterHistory() {
-  const query = document.getElementById("history-search").value.toLowerCase().trim();
+  const query = document.getElementById("history-search")?.value?.toLowerCase().trim() || "";
   if (!query) {
     renderHistoryTable(historyCache);
     return;
@@ -1070,10 +1115,31 @@ function viewScriptDetail(scriptId, event) {
   const script = historyCache.find(s => s.id == scriptId);
   if (script) {
     const detailBox = document.getElementById("history-detail-card");
-    detailBox.classList.remove("hidden");
-    document.getElementById("preview-topic-title").textContent = `📝 #${script.id}: ${script.topic}`;
-    document.getElementById("preview-content").textContent = script.content;
-    detailBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    if (detailBox) detailBox.classList.remove("hidden");
+    setTxt("preview-topic-title", `📝 #${script.id}: ${script.topic}`);
+    setTxt("preview-content", script.content);
+    
+    // If this script already has a generated video, load player immediately
+    const previewBox = document.getElementById("video-preview-box");
+    const player = document.getElementById("rendered-video-player");
+    const downloadBtn = document.getElementById("btn-download-video");
+    const statusEl = document.getElementById("video-info-status");
+    
+    if (script.video_url && player && previewBox) {
+      currentRenderedVideoFilename = script.video_url.split("/").pop();
+      player.src = script.video_url;
+      if (downloadBtn) downloadBtn.href = script.video_url;
+      previewBox.classList.remove("hidden");
+      if (statusEl) {
+        statusEl.innerHTML = `✅ <strong>វីដេអូ Reels រួចរាល់!</strong><br>គុណភាព: 1080x1920 (9:16 HD) សំឡេងខ្មែរ Neural Voice និងប្លង់ B-Roll ត្រូវតាមវិស័យ។`;
+        statusEl.style.color = "#34d399";
+      }
+    } else if (previewBox) {
+      previewBox.classList.add("hidden");
+      currentRenderedVideoFilename = null;
+    }
+    
+    if (detailBox) detailBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 }
 

@@ -20,9 +20,15 @@ def init_db():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date TEXT,
             topic TEXT,
-            content TEXT
+            content TEXT,
+            video_url TEXT
         )
     ''')
+    try:
+        c.execute("ALTER TABLE scripts ADD COLUMN video_url TEXT")
+    except Exception:
+        pass
+
     c.execute('''
         CREATE TABLE IF NOT EXISTS video_approvals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,18 +68,27 @@ def init_db():
         conn.commit()
     conn.close()
 
-def save_script(topic, content):
+def save_script(topic, content, video_url=None):
     conn = get_connection()
     c = conn.cursor()
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     c.execute(
-        "INSERT INTO scripts (date, topic, content) VALUES (?, ?, ?)",
-        (now_str, topic, content)
+        "INSERT INTO scripts (date, topic, content, video_url) VALUES (?, ?, ?, ?)",
+        (now_str, topic, content, video_url)
     )
     conn.commit()
     script_id = c.lastrowid
     conn.close()
     return script_id, now_str
+
+def update_script_video(script_id, video_url):
+    ensure_initialized()
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute("UPDATE scripts SET video_url = ? WHERE id = ?", (video_url, script_id))
+    conn.commit()
+    conn.close()
+    return True
 
 _initialized = False
 
@@ -87,7 +102,7 @@ def get_all_scripts():
     ensure_initialized()
     conn = get_connection()
     c = conn.cursor()
-    c.execute("SELECT id, date, topic, content FROM scripts ORDER BY id DESC")
+    c.execute("SELECT id, date, topic, content, video_url FROM scripts ORDER BY id DESC")
     rows = [dict(row) for row in c.fetchall()]
     conn.close()
     return rows
@@ -96,7 +111,7 @@ def get_script_by_id(script_id):
     ensure_initialized()
     conn = get_connection()
     c = conn.cursor()
-    c.execute("SELECT id, date, topic, content FROM scripts WHERE id = ?", (script_id,))
+    c.execute("SELECT id, date, topic, content, video_url FROM scripts WHERE id = ?", (script_id,))
     row = c.fetchone()
     conn.close()
     return dict(row) if row else None
