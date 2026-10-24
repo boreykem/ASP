@@ -444,6 +444,8 @@ def api_update_scheduler():
         sched["auto_diverse_topics"] = bool(data["auto_diverse_topics"])
     cfg["scheduler"] = sched
     save_config(cfg)
+    return jsonify({"success": True, "scheduler": sched, "state": scheduler_state})
+
 @app.route("/api/video/generate", methods=["POST"])
 def api_generate_video():
     import video_engine

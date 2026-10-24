@@ -1661,10 +1661,12 @@ async function saveSchedulerSettings() {
     const data = await res.json();
     if (data.success) {
       updateSchedulerBadge();
-      showToast(translations[currentLang].msgSaved, "success");
+      showToast(translations[currentLang]?.msgSaved || "បានរក្សាទុកការកំណត់ជោគជ័យ!", "success");
+    } else {
+      showToast(data.error || "Error saving schedule", "error");
     }
   } catch (err) {
-    showToast("Error saving schedule", "error");
+    showToast("Error saving schedule: " + (err.message || err), "error");
   }
 }
 
