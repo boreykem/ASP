@@ -91,8 +91,8 @@ const translations = {
     btnCopy: "ចម្លងស្គ្រីប",
     btnResend: "ផ្ញើចូល Telegram",
     btnDelete: "លុប",
-    btnCreateVideo: "ផលិតវីដេអូ Reels AI",
-    btnBroadcastVideoFb: "បង្ហោះវីដេអូទៅកាន់ Facebook Pages ទាំងអស់",
+    btnCreateVideo: "ផលិតវីដេអូ Reels ស្វ័យប្រវត្តិតាមប្រធានបទ",
+    btnBroadcastVideoFb: "បង្ហោះវីដេអូទៅ Facebook Pages ទាំង ២៣",
     btnDownloadVideo: "ទាញយក MP4",
     
     schedCardTitle: "ការកំណត់កាលវិភាគស្វ័យប្រវត្តប្រចាំថ្ងៃ",
@@ -199,6 +199,9 @@ const translations = {
     btnCopy: "Copy Script",
     btnResend: "Send to Telegram",
     btnDelete: "Delete",
+    btnCreateVideo: "Auto-Generate Topical Reels Video",
+    btnBroadcastVideoFb: "Broadcast Video to all 23 Facebook Pages",
+    btnDownloadVideo: "Download MP4",
     
     schedCardTitle: "Daily Auto-Scheduler Configuration",
     schedEnableTitle: "Daily Auto-Run Automation",
@@ -675,7 +678,8 @@ function setupEventListeners() {
   const btnCopyNbScript = document.getElementById("btn-copy-notebooklm");
   if (btnCopyNbScript) btnCopyNbScript.addEventListener("click", copyScriptForNotebookLM);
   
-  document.getElementById("btn-resend-script").addEventListener("click", resendSelectedScript);
+  const btnResend = document.getElementById("btn-resend-script");
+  if (btnResend) btnResend.addEventListener("click", resendSelectedScript);
   
   const btnPostFb = document.getElementById("btn-post-facebook");
   if (btnPostFb) btnPostFb.addEventListener("click", postSelectedScriptToFacebook);
@@ -688,6 +692,12 @@ function setupEventListeners() {
 
   const btnPrevSendApproval = document.getElementById("btn-preview-send-approval");
   if (btnPrevSendApproval) btnPrevSendApproval.addEventListener("click", handleSendRenderedVideoForApproval);
+
+  const btnTriggerUpload = document.getElementById("btn-trigger-upload");
+  if (btnTriggerUpload) btnTriggerUpload.addEventListener("click", triggerVideoFileUpload);
+
+  const videoFileInput = document.getElementById("video-file-input");
+  if (videoFileInput) videoFileInput.addEventListener("change", handleVideoFileUpload);
 
   const btnUrlSendApproval = document.getElementById("btn-url-send-approval");
   if (btnUrlSendApproval) btnUrlSendApproval.addEventListener("click", handleSendCustomUrlForApproval);
@@ -955,6 +965,9 @@ async function runBatchGeneration() {
   appendLog(`[${new Date().toLocaleTimeString()}] ${currentLang === 'km' ? 'ចាប់ផ្តើមដំណើរការបង្កើតស្គ្រីប...' : 'Starting script automation...'}`, "system");
   appendLog(`[Format] ${format} | [Tone] ${tone}`, "info");
   
+  const autoVideo = document.getElementById("gen-auto-video")?.checked ?? true;
+  const autoApproval = document.getElementById("gen-auto-approval")?.checked ?? true;
+  
   try {
     const res = await fetch("/api/generate-batch", {
       method: "POST",
@@ -966,7 +979,9 @@ async function runBatchGeneration() {
         format: format,
         tone: tone,
         topics: topics,
-        lang: currentLang
+        lang: currentLang,
+        auto_video: autoVideo,
+        auto_approval: autoApproval
       })
     });
     
@@ -989,15 +1004,18 @@ async function runBatchGeneration() {
           successCount++;
           appendLog(`[Script ${r.index}] 📝 ${r.topic}`, "info");
           if (r.model) appendLog(`   (Model: ${r.model})`, "model");
+          if (r.video_url) {
+            appendLog(`   🎬 វីដេអូ Reels 9:16: ${r.video_filename || 'ផលិតជោគជ័យ'}`, "success");
+          }
           if (r.telegram_sent) {
-            appendLog(`   ✅ ${currentLang === 'km' ? 'បានរក្សាទុក និងផ្ញើចូល Telegram ជោគជ័យ' : 'Saved & sent to Telegram successfully'}`, "success");
+            appendLog(`   📲 ${currentLang === 'km' ? 'បានផ្ញើទៅ Telegram (មានប៊ូតុង 1-Click Approve)' : 'Sent to Telegram (with 1-Click Approve)'}`, "success");
           } else {
             appendLog(`   ⚠️ ${currentLang === 'km' ? 'រក្សាទុកជោគជ័យ ប៉ុន្តែផ្ញើ Telegram បរាជ័យ' : 'Saved, but Telegram delivery failed'}: ${r.telegram_status}`, "error");
           }
           if (r.facebook_posted) {
             appendLog(`   📘 ${currentLang === 'km' ? 'បានបង្ហោះឡើង Facebook Page ជោគជ័យ' : 'Posted to Facebook Page successfully'}`, "success");
           } else if (r.facebook_status && r.facebook_status !== "Not configured") {
-            appendLog(`   ⚠️ Facebook: ${r.facebook_status}`, "error");
+            appendLog(`   ℹ️ Facebook: ${r.facebook_status}`, "info");
           }
         } else {
           appendLog(`[Script ${r.index}] ❌ ${r.topic} - ${r.error}`, "error");
@@ -1194,11 +1212,12 @@ async function createReelsVideoForSelectedScript() {
   const player = document.getElementById("rendered-video-player");
   const statusEl = document.getElementById("video-info-status");
   const downloadBtn = document.getElementById("btn-download-video");
+  const topicTitle = document.getElementById("preview-topic-title")?.textContent || "";
   
   if (btn) btn.disabled = true;
-  showToast(currentLang === "km" ? "🎬 កំពុងផលិតវីដេអូ Reels (សំឡេងខ្មែរ Neural + B-Roll)..." : "Generating Reels video...", "info");
+  showToast(currentLang === "km" ? "🎬 កំពុងផលិតវីដេអូ Reels ស្វ័យប្រវត្តិតាមប្រធានបទ..." : "Generating topical Reels video...", "info");
   if (statusEl) {
-    statusEl.textContent = currentLang === "km" ? "⏳ កំពុងផលិតវីដេអូ Reels (សំឡេងខ្មែរ Neural + ប្លង់ B-Roll 9:16)..." : "Rendering video...";
+    statusEl.textContent = currentLang === "km" ? "⏳ កំពុងផលិតវីដេអូ Reels (សំឡេងខ្មែរ Neural Voice + B-Roll ត្រូវតាមវិស័យ)..." : "Rendering video...";
     statusEl.style.color = "#f59e0b";
   }
   
@@ -1208,7 +1227,8 @@ async function createReelsVideoForSelectedScript() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         script_id: selectedScriptId,
-        b_roll: "coconut",
+        topic: topicTitle,
+        b_roll: "auto",
         voice: "km-KH-PisethNeural"
       })
     });
@@ -1219,7 +1239,7 @@ async function createReelsVideoForSelectedScript() {
       downloadBtn.href = data.video_url;
       previewBox.classList.remove("hidden");
       if (statusEl) {
-        statusEl.innerHTML = `✅ <strong>វីដេអូ Reels ផលិតជោគជ័យ!</strong><br>គុណភាព: 1080x1920 (9:16) ជាមួយសំឡេងខ្មែរ Neural Voice និងប្លង់ B-Roll។`;
+        statusEl.innerHTML = `✅ <strong>វីដេអូ Reels ផលិតជោគជ័យ!</strong><br>គុណភាព: 1080x1920 (9:16 HD) ជាមួយសំឡេងខ្មែរ Neural Voice និងប្លង់ B-Roll ត្រូវតាមវិស័យ។`;
         statusEl.style.color = "#34d399";
       }
       showToast(currentLang === "km" ? "🎬 វីដេអូ Reels ផលិតជោគជ័យ!" : "Reels video generated successfully!", "success");
@@ -1273,55 +1293,72 @@ async function broadcastRenderedVideoToFacebook() {
   }
 }
 
-async function createVeoVideoForSelectedScript() {
-  if (!selectedScriptId) {
-    showToast(currentLang === "km" ? "សូមជ្រើសរើសស្គ្រីបមួយជាមុនសិន!" : "Please select a script first!", "error");
-    return;
-  }
-  const btn = document.getElementById("btn-create-veo-video");
-  const previewBox = document.getElementById("video-preview-box");
+function triggerVideoFileUpload() {
+  const fileInput = document.getElementById("video-file-input");
+  if (fileInput) fileInput.click();
+}
+
+async function handleVideoFileUpload(e) {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  
+  const statusEl = document.getElementById("upload-file-status");
+  const urlInput = document.getElementById("custom-video-url-input");
   const player = document.getElementById("rendered-video-player");
-  const statusEl = document.getElementById("video-info-status");
+  const previewBox = document.getElementById("video-preview-box");
   const downloadBtn = document.getElementById("btn-download-video");
   
-  if (btn) btn.disabled = true;
-  showToast(currentLang === "km" ? "✨ កំពុងភ្ជាប់ទៅកាន់ Google Veo AI Video (Gemini)..." : "Connecting to Google Veo AI Video...", "info");
   if (statusEl) {
-    statusEl.textContent = currentLang === "km" ? "⏳ កំពុងដំណើរការ Google Veo AI Video (9:16 Cinematic Reels)..." : "Generating Google Veo AI Video...";
+    statusEl.textContent = `⏳ កំពុង Upload File: ${file.name} (${(file.size / (1024*1024)).toFixed(1)} MB)...`;
     statusEl.style.color = "#60a5fa";
   }
-  previewBox.classList.remove("hidden");
-  previewBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  showToast(currentLang === "km" ? `⏳ កំពុង Upload វីដេអូ៖ ${file.name}...` : `Uploading video: ${file.name}...`, "info");
+  
+  const formData = new FormData();
+  formData.append("video_file", file);
   
   try {
-    const res = await fetch("/api/video/veo", {
+    const res = await fetch("/api/video/upload", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        script_id: selectedScriptId
-      })
+      body: formData
     });
     const data = await res.json();
     if (data.success && data.video_url) {
       currentRenderedVideoFilename = data.filename;
-      player.src = data.video_url + "?t=" + Date.now();
-      downloadBtn.href = data.video_url;
+      if (urlInput) urlInput.value = data.video_url;
       if (statusEl) {
-        statusEl.innerHTML = `✅ <strong>${data.message}</strong><br>គុណភាព: 1080x1920 (9:16 Vertical) រួចរាល់សម្រាប់បង្ហោះចូល Facebook Pages!`;
+        statusEl.innerHTML = `✅ <strong>${file.name}</strong> (${(file.size / (1024*1024)).toFixed(1)} MB) - រួចរាល់!`;
         statusEl.style.color = "#34d399";
       }
-      showToast(currentLang === "km" ? "🎉 វីដេអូ AI ផលិតជោគជ័យ!" : "AI video generated successfully!", "success");
+      if (player) {
+        player.src = data.video_url;
+      }
+      if (downloadBtn) {
+        downloadBtn.href = data.video_url;
+      }
+      if (previewBox) {
+        previewBox.classList.remove("hidden");
+        const videoStatus = document.getElementById("video-info-status");
+        if (videoStatus) {
+          videoStatus.innerHTML = `✅ <strong>បាន Upload វីដេអូផ្ទាល់ខ្លួនរួចរាល់!</strong><br>File: ${data.filename} (${(file.size / (1024*1024)).toFixed(1)} MB) រួចរាល់សម្រាប់ Post ទៅកាន់ Pages ទាំង ២៣។`;
+          videoStatus.style.color = "#34d399";
+        }
+        previewBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+      showToast(currentLang === "km" ? "🎉 បាន Upload វីដេអូជោគជ័យ!" : "Video uploaded successfully!", "success");
     } else {
-      showToast("Google Veo: " + (data.error || "Failed"), "error");
       if (statusEl) {
-        statusEl.textContent = "❌ " + (data.error || "Failed");
+        statusEl.textContent = `❌ ${data.error || "Upload failed"}`;
         statusEl.style.color = "#ef4444";
       }
+      showToast(data.error || "Upload failed", "error");
     }
   } catch (err) {
-    showToast("Network error: " + err.message, "error");
-  } finally {
-    if (btn) btn.disabled = false;
+    if (statusEl) {
+      statusEl.textContent = `❌ កំហុស: ${err.message}`;
+      statusEl.style.color = "#ef4444";
+    }
+    showToast("Error: " + err.message, "error");
   }
 }
 

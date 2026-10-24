@@ -107,15 +107,41 @@ def get_media_duration(file_path: str) -> float:
         return int(h) * 3600 + int(m) * 60 + float(s)
     return 10.0
 
+def detect_b_roll_topic(script_text: str = "", topic: str = "") -> str:
+    """
+    វិភាគស្វែងរក Topic ឱ្យត្រូវនឹង Folder B-Roll ដោយស្វ័យប្រវត្តិ:
+    - sanitation: បូមលូ, បង្គន់ស្ទះ, លាងសម្អាត, អនាម័យ, លូស្អុយ, បូមកាកសំណល់
+    - coconut: ដូង, កសិកម្ម, ចម្ការដូង, ដំណាំ, ផ្លែដូង
+    - general: ទូទៅ, បច្ចេកវិទ្យា, អប់រំ, អាជីវកម្ម, ផ្សេងៗ
+    """
+    combined = f"{topic} {script_text}".lower()
+    
+    sanitation_keywords = [
+        "លូ", "បង្គន់", "បូម", "ស្ទះ", "លាងសម្អាត", "កាកសំណល់", "អនាម័យ",
+        "sewer", "sanitation", "toilet", "pump", "plumbing", "drain", "pipe", "cleaning"
+    ]
+    if any(k in combined for k in sanitation_keywords):
+        return "sanitation"
+        
+    coconut_keywords = [
+        "ដូង", "កសិកម្ម", "ចម្ការ", "ដំណាំ", "ផ្លែឈើ", "កសិករ",
+        "coconut", "farm", "agriculture", "harvest", "plantation", "tree"
+    ]
+    if any(k in combined for k in coconut_keywords):
+        return "coconut"
+        
+    return "general"
+
 def create_reels_video(
     script_text: str,
     voice: str = DEFAULT_MALE_VOICE,
     speed: str = "+10%",
-    b_roll_folder: str = "coconut",
+    topic: str = "",
+    b_roll_folder: str = None,
     output_filename: str = None
 ) -> str:
     """
-    ផលិតវីដេអូបញ្ឈរ 9:16 (1080x1920) ពេញលេញដោយស្វ័យប្រវត្តិ
+    ផលិតវីដេអូបញ្ឈរ 9:16 (1080x1920) ពេញលេញដោយស្វ័យប្រវត្តិតាមប្រធានបទ
     """
     timestamp = int(time.time())
     if not output_filename:
@@ -123,6 +149,16 @@ def create_reels_video(
         
     out_video_path = str(OUTPUT_DIR / output_filename)
     voice_prefix = f"voice_{timestamp}"
+    
+    # ស្វែងរក B-Roll folder ឆ្លាតវៃតាម Topic & Script
+    if not b_roll_folder or b_roll_folder in ["auto", "coconut"]:
+        detected = detect_b_roll_topic(script_text, topic)
+        if not b_roll_folder or b_roll_folder == "auto" or detected != "coconut":
+            b_roll_folder = detected
+    if not b_roll_folder:
+        b_roll_folder = "general"
+        
+    print(f"[*] ប្រធានបទ: '{topic or 'Auto'}' ➔ ជ្រើសរើស B-Roll Folder: '{b_roll_folder}'")
     
     # ជំហានទី ១: បង្កើត Voiceover
     print(f"[*] កំពុងបង្កើតសំឡេងអានខ្មែរ Neural Voice ({voice})...")
@@ -137,6 +173,11 @@ def create_reels_video(
     if target_b_roll.exists():
         images = list(target_b_roll.glob("*.jpg")) + list(target_b_roll.glob("*.png"))
         
+    if not images:
+        fallback_general = B_ROLL_DIR / "general"
+        if fallback_general.exists():
+            images = list(fallback_general.glob("*.jpg")) + list(fallback_general.glob("*.png"))
+            
     if not images:
         images = list(B_ROLL_DIR.glob("**/*.jpg")) + list(B_ROLL_DIR.glob("**/*.png"))
         

@@ -301,6 +301,7 @@
           </div>
 
           <!-- Preview & Detail Section -->
+          <!-- Preview & Detail Section -->
           <div id="history-detail-card" class="detail-box hidden">
             <div class="detail-header">
               <h3 id="preview-topic-title">ប្រធានបទស្គ្រីប</h3>
@@ -311,12 +312,6 @@
                 <button id="btn-copy-script" class="btn btn-secondary btn-sm">
                   📋 <span id="btn-copy-text">ចម្លងស្គ្រីប</span>
                 </button>
-                <button id="btn-create-video" class="btn btn-primary btn-sm" title="ផលិតវីដេអូ Reels (9:16) ដោយស្វ័យប្រវត្តិ">
-                  🎬 <span id="btn-create-video-text">ផលិតវីដេអូ Reels AI</span>
-                </button>
-                <button id="btn-send-approval" class="btn btn-accent btn-sm" title="ផ្ញើវីដេអូទៅ Telegram ដើម្បីសុំ Approval">
-                  📲 <span id="btn-send-approval-text">ផ្ញើទៅ Telegram ដើម្បី Approve</span>
-                </button>
                 <button id="btn-delete-script" class="btn btn-danger btn-sm">
                   🗑️ <span id="btn-delete-text">លុប</span>
                 </button>
@@ -324,49 +319,85 @@
             </div>
             <pre id="preview-content" class="script-content-pre"></pre>
 
-            <!-- Video Generation & Player Container -->
-            <div id="video-preview-box" class="video-preview-box hidden" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-              <h4 style="margin-bottom: 10px; color: var(--accent);">🎬 វីដេអូ Reels ដែលបានផលិតរួចរាល់ (Preview 9:16 HD)</h4>
-              <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
-                <video id="rendered-video-player" controls style="max-width: 240px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"></video>
-                <div style="flex: 1; min-width: 250px;">
-                  <p id="video-info-status" style="font-size: 0.9rem; margin-bottom: 10px; color: #a0aec0;">វីដេអូបញ្ឈរគុណភាព HD 1080x1920 ជាមួយសំឡេងខ្មែរ Neural Voice និងប្លង់ B-Roll រួចរាល់សម្រាប់ផ្សព្វផ្សាយ។</p>
-                  <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
-                    <button id="btn-preview-send-approval" class="btn btn-accent btn-sm">
-                      📲 <span>ផ្ញើទៅ Telegram ដើម្បី Approve</span>
-                    </button>
-                    <button id="btn-broadcast-video-fb" class="btn btn-primary btn-sm">
-                      🚀 <span id="btn-broadcast-video-fb-text">បង្ហោះវីដេអូទៅកាន់ Facebook Pages ទាំងអស់</span>
-                    </button>
-                    <a id="btn-download-video" class="btn btn-secondary btn-sm" download target="_blank">
-                      ⬇️ <span id="btn-download-video-text">ទាញយក MP4</span>
-                    </a>
+            <!-- ACTION 1: ផលិតវីដេអូ Reels ស្វ័យប្រវត្តិតាមប្រធានបទ -->
+            <div class="video-action-panel action-card-auto" style="margin-top: 18px; padding: 18px; background: rgba(16, 185, 129, 0.08); border-radius: 14px; border: 1px solid rgba(16, 185, 129, 0.35);">
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+                <div>
+                  <h4 style="margin: 0 0 4px 0; color: #34d399; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                    <span>🎬</span> <strong>សកម្មភាពទី ១: ផលិតវីដេអូ Reels ស្វ័យប្រវត្តិតាមប្រធានបទ</strong>
+                  </h4>
+                  <p style="margin: 0; font-size: 0.82rem; color: #cbd5e1;">
+                    អានជាសំឡេងខ្មែរ <strong>Neural Voice (Piseth / Sreymom)</strong> + ប្លង់រូបភាព <strong>B-Roll ត្រូវតាមវិស័យ</strong> (លូ/បង្គន់/អនាម័យ, ចម្ការដូង/កសិកម្ម, ទូទៅ/បច្ចេកវិទ្យា)
+                  </p>
+                </div>
+                <button id="btn-create-video" class="btn btn-primary" style="background: linear-gradient(135deg, #059669, #10b981); border: none; font-weight: 700; padding: 10px 22px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);">
+                  🎬 <span id="btn-create-video-text">ផលិតវីដេអូ Reels ស្វ័យប្រវត្តិតាមប្រធានបទ</span>
+                </button>
+              </div>
+
+              <!-- Video Player & Approval Container (Appears when video is ready) -->
+              <div id="video-preview-box" class="video-preview-box hidden" style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.4); border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);">
+                <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+                  <video id="rendered-video-player" controls style="max-width: 230px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.6); background: #000;"></video>
+                  <div style="flex: 1; min-width: 250px;">
+                    <h5 style="margin: 0 0 8px 0; color: #34d399; font-size: 1rem;">✅ វីដេអូ Reels (9:16 HD) ផលិតរួចរាល់!</h5>
+                    <p id="video-info-status" style="font-size: 0.88rem; margin-bottom: 15px; color: #94a3b8; line-height: 1.5;">
+                      វីដេអូបញ្ឈរ 1080x1920 ជាមួយសំឡេងខ្មែរ Neural Voice និងប្លង់ B-Roll ត្រូវតាមវិស័យរួចរាល់សម្រាប់ផ្សព្វផ្សាយ។
+                    </p>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                      <button id="btn-preview-send-approval" class="btn btn-accent btn-sm" style="font-weight: 600;">
+                        📲 <span>ផ្ញើទៅ Telegram សុំ Approve</span>
+                      </button>
+                      <button id="btn-broadcast-video-fb" class="btn btn-primary btn-sm" style="font-weight: 600;">
+                        🚀 <span id="btn-broadcast-video-fb-text">បង្ហោះវីដេអូទៅ Facebook Pages ទាំង ២៣</span>
+                      </button>
+                      <a id="btn-download-video" class="btn btn-secondary btn-sm" download target="_blank">
+                        ⬇️ <span id="btn-download-video-text">ទាញយក MP4</span>
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- URL Pull Video Broadcast Box (Direct Link to 23 Pages) -->
-            <div id="url-pull-box" style="margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.06); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.25);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <h4 style="margin: 0; color: #60a5fa; display: flex; align-items: center; gap: 6px;">
-                  <span>🔗</span> <span id="title-url-pull">វីដេអូផ្ទាល់ខ្លួន (Video Link) & Telegram Approval មុននឹង Post</span>
+            <!-- ACTION 2: UPLOAD ឬដាក់ LINK វីដេអូផ្ទាល់ខ្លួន ➔ POST ទៅ PAGES ទាំង ២៣ -->
+            <div class="video-action-panel action-card-custom" id="url-pull-box" style="margin-top: 16px; padding: 18px; background: rgba(59, 130, 246, 0.08); border-radius: 14px; border: 1px solid rgba(59, 130, 246, 0.35);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+                <h4 style="margin: 0; color: #60a5fa; font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+                  <span>📁</span> <strong>សកម្មភាពទី ២: Upload ឬដាក់ Link វីដេអូផ្ទាល់ខ្លួន ➔ Post ទៅ Pages ទាំង ២៣</strong>
                 </h4>
-                <span class="badge" style="background: rgba(59, 130, 246, 0.25); color: #bfdbfe; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">1-Click Approval</span>
+                <span class="badge" style="background: rgba(59, 130, 246, 0.25); color: #bfdbfe; font-size: 0.75rem; padding: 3px 9px; border-radius: 6px;">Telegram 1-Click Approve</span>
               </div>
-              <p class="text-muted" id="desc-url-pull" style="font-size: 0.8rem; margin: 0 0 10px 0;">
-                💡 បញ្ចូល Link វីដេអូ (MP4, Google Drive, CapCut) ➔ ផ្ញើទៅ Telegram ដើម្បីឱ្យអ្នក Approve ជាមុន ➔ បង្ហោះចូល Facebook ២៣ Pages ដោយស្វ័យប្រវត្តិ!
+              <p class="text-muted" style="font-size: 0.82rem; margin: 0 0 14px 0; color: #94a3b8;">
+                ជ្រើសរើស File វីដេអូ MP4 ពីក្នុងកុំព្យូទ័រ ឬដាក់ Link វីដេអូ (MP4, Google Drive, CapCut) ➔ ផ្ញើទៅ Telegram សុំ Approve មុនបង្ហោះ ឬ Post ផ្ទាល់ទៅកាន់ Pages ទាំង ២៣។
               </p>
-              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <input type="url" id="custom-video-url-input" class="form-control" style="flex: 1; min-width: 240px;" placeholder="https://domain.com/video.mp4">
-                <button id="btn-url-send-approval" class="btn btn-accent btn-sm" style="white-space: nowrap;">
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                <!-- Choice A: File Upload from Computer -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(59, 130, 246, 0.4); border-radius: 10px; padding: 14px; text-align: center;">
+                  <input type="file" id="video-file-input" accept="video/mp4,video/quicktime,video/webm" style="display: none;">
+                  <button type="button" id="btn-trigger-upload" class="btn btn-secondary btn-sm" style="width: 100%; margin-bottom: 6px; font-weight: 600;">
+                    📁 <span id="btn-trigger-upload-text">Upload File វីដេអូ MP4 ពីកុំព្យូទ័រ</span>
+                  </button>
+                  <div id="upload-file-status" style="font-size: 0.78rem; color: #94a3b8; word-break: break-all;">មិនទាន់បានជ្រើសរើស File</div>
+                </div>
+
+                <!-- Choice B: Video Link / URL -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 10px; padding: 14px;">
+                  <label for="custom-video-url-input" style="font-size: 0.82rem; color: #cbd5e1; display: block; margin-bottom: 6px; font-weight: 500;">🔗 ឬបញ្ចូល Link វីដេអូ (Video URL):</label>
+                  <input type="url" id="custom-video-url-input" class="form-control" style="font-size: 0.85rem;" placeholder="https://domain.com/video.mp4">
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <button id="btn-url-send-approval" class="btn btn-accent btn-sm" style="white-space: nowrap; font-weight: 600;">
                   📲 <span>ផ្ញើទៅ Telegram សុំ Approve</span>
                 </button>
-                <button id="btn-broadcast-url-fb" class="btn btn-primary btn-sm" style="white-space: nowrap;">
-                  🚀 <span id="btn-broadcast-url-fb-text">បង្ហោះផ្ទាល់ (Direct)</span>
+                <button id="btn-broadcast-url-fb" class="btn btn-primary btn-sm" style="white-space: nowrap; font-weight: 600;">
+                  🚀 <span>បង្ហោះទៅ Facebook Pages ទាំង ២៣</span>
                 </button>
+                <span id="url-broadcast-status" class="text-muted" style="font-size: 0.82rem; margin-left: 5px;"></span>
               </div>
-              <span id="url-broadcast-status" class="text-muted" style="font-size: 0.82rem; display: block; margin-top: 6px;"></span>
             </div>
           </div>
 
@@ -611,6 +642,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- JavaScript -->
-  <script src="/static/js/app.js?v=20261024_13"></script>
+  <script src="/static/js/app.js?v=20261024_15"></script>
 </body>
 </html>

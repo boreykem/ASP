@@ -280,6 +280,9 @@ def api_generate_batch():
     cfg["language"] = lang
     save_config(cfg)
     
+    auto_video = data.get("auto_video", True)
+    auto_approval = data.get("auto_approval", True)
+    
     results = []
     for idx, topic in enumerate(clean_topics[:5]):
         ok, content, model = ai_service.generate_script(key, topic, platform=platform, tone=tone, lang=lang)
@@ -295,14 +298,46 @@ def api_generate_batch():
         # Save to DB
         script_id, date_str = database.save_script(topic, content)
         
-        # Send to Telegram
-        tg_text = f"📝 *ស្គ្រីបទី {idx+1}: {topic}*\n\n{content}"
-        tg_ok, tg_status = telegram_service.send_message(bot_token, chat_id, tg_text)
+        # 1. Video Output Engine (Topic-aware Reels 9:16)
+        vid_filename = None
+        vid_url = None
+        if auto_video:
+            try:
+                import video_engine
+                vid_path = video_engine.create_reels_video(script_text=content, topic=topic)
+                vid_filename = os.path.basename(vid_path)
+                vid_url = f"/static/videos/{vid_filename}"
+            except Exception as e_v:
+                print(f"[!] Auto-video error for topic '{topic}': {e_v}")
         
-        # Post to Facebook Page(s) if enabled
+        # 2. Telegram Workflow: Interactive Approval Card with Video Link OR Script text
+        tg_ok = False
+        tg_status = "Pending"
+        if auto_approval and vid_url and bot_token and chat_id:
+            try:
+                approval_id = database.create_video_approval(topic, content, vid_url, script_id=script_id)
+                host_url = request.host_url.rstrip("/")
+                web_base_url = "https://asp-ac.vercel.app" if ("localhost" in host_url or "127.0.0.1" in host_url) else host_url
+                tg_ok, tg_status = telegram_service.send_video_approval_card(
+                    bot_token=bot_token,
+                    chat_id=chat_id,
+                    title=topic,
+                    video_url=vid_url,
+                    description=content,
+                    approval_id=approval_id,
+                    web_base_url=web_base_url
+                )
+            except Exception as e_ap:
+                tg_ok = False
+                tg_status = str(e_ap)
+        elif bot_token and chat_id:
+            tg_text = f"📝 *ស្គ្រីបទី {idx+1}: {topic}*\n\n{content}"
+            tg_ok, tg_status = telegram_service.send_message(bot_token, chat_id, tg_text)
+            
+        # 3. Direct Facebook Posting (only if auto_approval is OFF and fb_auto is explicitly ON)
         fb_ok = False
-        fb_status = "Not configured"
-        if fb_auto:
+        fb_status = "Waiting Approval" if auto_approval else "Not configured"
+        if fb_auto and not auto_approval:
             pages_to_post = cfg.get("facebook_selected_pages") or []
             if not pages_to_post and fb_page_id and fb_token:
                 pages_to_post = [{"id": fb_page_id, "name": "Primary Page", "access_token": fb_token}]
@@ -320,6 +355,8 @@ def api_generate_batch():
             "success": True,
             "model": model,
             "date": date_str,
+            "video_url": vid_url,
+            "video_filename": vid_filename,
             "telegram_sent": tg_ok,
             "telegram_status": tg_status,
             "facebook_posted": fb_ok,
@@ -453,12 +490,14 @@ def api_generate_video():
     script_id = data.get("script_id")
     script_text = data.get("script_text")
     voice = data.get("voice", "km-KH-PisethNeural")
-    b_roll = data.get("b_roll", "coconut")
+    b_roll = data.get("b_roll", "auto")
+    topic = data.get("topic", "")
     
     if script_id:
         s = database.get_script_by_id(script_id)
         if s:
             script_text = s.get("content", "")
+            topic = s.get("topic", topic)
             
     if not script_text:
         return jsonify({"success": False, "error": "អត្ថបទ Script មិនអាចទទេបានឡើយ"}), 400
@@ -467,7 +506,8 @@ def api_generate_video():
         vid_path = video_engine.create_reels_video(
             script_text=script_text,
             voice=voice,
-            b_roll_folder=b_roll
+            topic=topic,
+            b_roll_folder=b_roll if b_roll not in ["auto", "coconut", ""] else None
         )
         filename = os.path.basename(vid_path)
         video_url = f"/static/videos/{filename}"
@@ -479,6 +519,40 @@ def api_generate_video():
         })
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
+@app.route("/api/video/upload", methods=["POST"])
+def api_upload_video():
+    from werkzeug.utils import secure_filename
+    if "video_file" not in request.files:
+        return jsonify({"success": False, "error": "រកមិនឃើញ File វីដេអូត្រូវបានជ្រើសរើសឡើយ"}), 400
+        
+    file = request.files["video_file"]
+    if not file or file.filename == "":
+        return jsonify({"success": False, "error": "ឈ្មោះ File មិនត្រឹមត្រូវ"}), 400
+        
+    filename = secure_filename(file.filename)
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in [".mp4", ".mov", ".webm", ".avi", ".mkv"]:
+        return jsonify({"success": False, "error": "សូមជ្រើសរើស File ជាប្រភេទ Video (MP4, MOV, WEBM)"}), 400
+        
+    timestamp = int(time.time())
+    safe_name = f"upload_{timestamp}_{filename}"
+    if os.environ.get("VERCEL"):
+        save_dir = "/tmp/videos"
+    else:
+        save_dir = os.path.join(BASE_DIR, "static", "videos")
+    os.makedirs(save_dir, exist_ok=True)
+    
+    save_path = os.path.join(save_dir, safe_name)
+    file.save(save_path)
+    
+    video_url = f"/static/videos/{safe_name}"
+    return jsonify({
+        "success": True,
+        "message": "បាន Upload វីដេអូផ្ទាល់ខ្លួនជោគជ័យ!",
+        "filename": safe_name,
+        "video_url": video_url
+    })
 
 @app.route("/api/video/broadcast-facebook", methods=["POST"])
 def api_broadcast_video_facebook():
@@ -523,7 +597,6 @@ def api_broadcast_video_facebook():
 
 @app.route("/api/video/veo", methods=["POST"])
 def api_generate_video_veo():
-    import veo_service
     import video_engine
     
     data = request.json or {}
@@ -537,41 +610,24 @@ def api_generate_video_veo():
             script_text = s.get("content", "")
             topic = s.get("topic", topic)
             
-    cfg = load_config()
-    api_key = cfg.get("gemini_key")
-    if not api_key:
-        return jsonify({"success": False, "error": "សូមកំណត់ Gemini API Key ក្នុង Settings ជាមុនសិន!"}), 400
+    if not script_text:
+        return jsonify({"success": False, "error": "អត្ថបទ Script មិនអាចទទេបានឡើយ"}), 400
         
-    prompt = veo_service.generate_veo_prompt_from_script(script_text, topic)
-    ok, result, info = veo_service.generate_video_with_veo(api_key, prompt, aspect_ratio="9:16")
-    
-    if ok:
-        filename = os.path.basename(result)
-        video_url = f"/static/videos/{filename}"
+    try:
+        vid_path = video_engine.create_reels_video(
+            script_text=script_text,
+            topic=topic
+        )
+        filename = os.path.basename(vid_path)
         return jsonify({
             "success": True,
-            "message": "បានបង្កើតវីដេអូតាម Google Veo AI ជោគជ័យ!",
-            "video_url": video_url,
+            "message": "បានបង្កើតវីដេអូ Reels 9:16 HD ជោគជ័យ!",
+            "video_url": f"/static/videos/{filename}",
             "filename": filename,
-            "engine": "google_veo"
+            "engine": "smart_reels"
         })
-    else:
-        # Graceful fallback: If Veo is on free tier quota or model unavailable,
-        # automatically generate high-definition Reels video using internal engine
-        if info in ["free_tier_quota", "model_unavailable"] and script_text:
-            try:
-                vid_path = video_engine.create_reels_video(script_text=script_text)
-                filename = os.path.basename(vid_path)
-                return jsonify({
-                    "success": True,
-                    "message": "💡 Google Veo កំពុងកំណត់សិទ្ធិលើ Free Tier (ប្រព័ន្ធបានប្តូរមកបង្កើតវីដេអូ Reels 9:16 ជូនដោយឥតគិតថ្លៃជោគជ័យ!)",
-                    "video_url": f"/static/videos/{filename}",
-                    "filename": filename,
-                    "engine": "local_fallback"
-                })
-            except Exception as e_fall:
-                return jsonify({"success": False, "error": f"{result} (Fallback Error: {str(e_fall)})"}), 500
-        return jsonify({"success": False, "error": result}), 400
+    except Exception as e_fall:
+        return jsonify({"success": False, "error": f"កំហុសក្នុងការបង្កើតវីដេអូ: {str(e_fall)}"}), 500
 
 @app.route("/api/facebook/broadcast-url", methods=["POST"])
 def api_broadcast_video_url():
