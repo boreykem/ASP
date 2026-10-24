@@ -62,7 +62,16 @@ def save_script(topic, content):
     conn.close()
     return script_id, now_str
 
+_initialized = False
+
+def ensure_initialized():
+    global _initialized
+    if not _initialized or not os.path.exists(DB_NAME):
+        init_db()
+        _initialized = True
+
 def get_all_scripts():
+    ensure_initialized()
     conn = get_connection()
     c = conn.cursor()
     c.execute("SELECT id, date, topic, content FROM scripts ORDER BY id DESC")
@@ -71,6 +80,7 @@ def get_all_scripts():
     return rows
 
 def get_script_by_id(script_id):
+    ensure_initialized()
     conn = get_connection()
     c = conn.cursor()
     c.execute("SELECT id, date, topic, content FROM scripts WHERE id = ?", (script_id,))
