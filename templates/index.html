@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261024_04">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261024_05">
 </head>
 <body>
 
@@ -494,6 +494,27 @@
             <span id="fb-verify-status" class="text-muted" style="font-size: 0.85rem;"></span>
           </div>
 
+          <!-- Guide Banner: How to Broadcast to All 23 Pages -->
+          <div class="meta-token-guide-box" style="margin: 0.75rem 0; padding: 0.85rem 1rem; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 8px; font-size: 0.85rem; line-height: 1.5;">
+            <div style="font-weight: 600; color: #60a5fa; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem;">
+              <span>💡</span> <span>របៀបបង្ហោះចូលគ្រប់ Facebook Pages ទាំង ២៣ (All Pages Broadcast Guide)៖</span>
+            </div>
+            <p style="margin: 0 0 0.4rem 0; color: #cbd5e1; font-size: 0.82rem;">
+              • <strong>Page Access Token (បច្ចុប្បន្ន)៖</strong> ប្រើបានសម្រាប់តែ ១ Page គត់ (ចំការដូងក្រអូប)។<br>
+              • <strong>User Access Token (Admin Master Token)៖</strong> អនុញ្ញាតឱ្យទាញយក និង Post លើគ្រប់ Pages ទាំងអស់ក្នុងពេលតែមួយ។
+            </p>
+            <details style="cursor: pointer; color: #93c5fd; font-size: 0.82rem;">
+              <summary style="font-weight: 500;">📖 មើលរបៀបយក User Token ពី Graph API Explorer (៣ ជំហានងាយៗ)</summary>
+              <ol style="margin: 0.5rem 0 0 1.2rem; padding: 0; color: #cbd5e1; font-size: 0.8rem; line-height: 1.6;">
+                <li>ចូលទៅកាន់ <strong><a href="https://developers.facebook.com/tools/explorer/" target="_blank" style="color: #60a5fa; text-decoration: underline;">developers.facebook.com/tools/explorer</a></strong></li>
+                <li>ត្រង់ប្រអប់ <strong>"User or Page"</strong> ជ្រើសយក <strong>"User Token"</strong> (កុំជ្រើសរើសឈ្មោះ Page ណាមួយ)</li>
+                <li>ត្រង់ <strong>Permissions</strong> បន្ថែម ៣ នេះ៖ <code>pages_show_list</code>, <code>pages_read_engagement</code>, <code>pages_manage_posts</code></li>
+                <li>ចុចប៊ូតុងខៀវ <strong>Generate Access Token</strong> រួច Copy Token មក Paste ក្នុងប្រអប់ខាងលើ</li>
+                <li>ចុចប៊ូតុង <strong>"📥 ទាញយក Pages របស់ខ្ញុំ"</strong> -> Pages ទាំង ២៣ នឹងបង្ហាញឡើងភ្លាមៗ!</li>
+              </ol>
+            </details>
+          </div>
+
           <!-- Multi-Page Broadcast Options -->
           <div class="scheduler-toggle-box" style="margin-top: 0.5rem;">
             <div>
@@ -556,6 +577,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- JavaScript -->
-  <script src="/static/js/app.js?v=20261024_04"></script>
+  <script src="/static/js/app.js?v=20261024_05"></script>
 </body>
 </html>

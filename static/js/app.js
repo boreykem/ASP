@@ -1354,10 +1354,14 @@ async function fetchFacebookPages(silent = false) {
         selectEl.appendChild(opt);
       });
       if (statusEl) {
-        statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានរកឃើញ ' + data.pages.length + ' Pages' : 'Found ' + data.pages.length + ' Pages'}`;
+        if (data.pages.length === 1) {
+          statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានភ្ជាប់ Page \'' + data.pages[0].name + '\' (ដើម្បី Post លើគ្រប់ ២៣ Pages សូមប្រើ User Token)' : 'Connected Page \'' + data.pages[0].name + '\' (Use User Token for all 23 Pages)'}`;
+        } else {
+          statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានរកឃើញ ' + data.pages.length + ' Pages' : 'Found ' + data.pages.length + ' Pages'}`;
+        }
         statusEl.style.color = "#34d399";
       }
-      if (!silent) showToast(translations[currentLang].msgPagesLoaded, "success");
+      if (!silent) showToast(data.pages.length > 1 ? translations[currentLang].msgPagesLoaded : (currentLang === 'km' ? 'បានភ្ជាប់ Page ' + data.pages[0].name : 'Connected Page ' + data.pages[0].name), "success");
     } else {
       const isExpired = (data.message || "").toLowerCase().includes("expired");
       if (statusEl) {

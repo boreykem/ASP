@@ -57,13 +57,23 @@ DEFAULT_CONFIG = {
 
 def load_config():
     cfg = DEFAULT_CONFIG.copy()
-    if os.path.exists(CONFIG_FILE):
+    base_cfg_file = os.path.join(BASE_DIR, "config.json")
+    if os.path.exists(base_cfg_file):
+        try:
+            with open(base_cfg_file, "r", encoding="utf-8") as f:
+                saved = json.load(f)
+                cfg.update(saved)
+        except Exception:
+            pass
+            
+    if CONFIG_FILE != base_cfg_file and os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE, "r", encoding="utf-8") as f:
                 saved = json.load(f)
                 cfg.update(saved)
         except Exception:
             pass
+            
     # Support environment variables (ideal for Vercel / Cloud Hosting)
     cfg["gemini_key"] = os.environ.get("GEMINI_API_KEY") or cfg.get("gemini_key") or DEFAULT_CONFIG["gemini_key"]
     cfg["bot_token"] = os.environ.get("TELEGRAM_BOT_TOKEN") or cfg.get("bot_token") or DEFAULT_CONFIG["bot_token"]

@@ -126,7 +126,7 @@ def get_user_pages(access_token):
                 "access_token": access_token,
                 "tasks": ["CREATE_CONTENT", "MANAGE"]
             }]
-            return True, f"ភ្ជាប់ទៅកាន់ Page '{me_data['name']}' (ID: {me_data['id']}) ជោគជ័យ!", pages
+            return True, f"ភ្ជាប់ទៅកាន់ Page '{me_data['name']}' ជោគជ័យ! (សម្គាល់៖ Token នេះជា Page Token សម្រាប់តែ ១ Page នេះប៉ុណ្ណោះ។ ដើម្បីទាញយក និង Post គ្រប់ ២៣ Pages សូមប្រើ User Token ពី Graph API Explorer)", pages
             
         err = data.get("error", {})
         return False, err.get("message", f"HTTP {res.status_code}"), []
