@@ -745,6 +745,8 @@ async function loadInitialConfig() {
       if (c.facebook_selected_pages && c.facebook_selected_pages.length > 0) {
         fbPagesCache = c.facebook_selected_pages;
         renderPagesChecklist(fbPagesCache);
+      } else if (c.facebook_access_token) {
+        fetchFacebookPages();
       }
       
       if (c.format) {
