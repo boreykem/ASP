@@ -141,28 +141,33 @@ def broadcast_to_pages(pages, message, delay=0.5):
     if not pages or not isinstance(pages, list):
         return False, "គ្មាន Facebook Pages ត្រូវបានជ្រើសរើសឡើយ", []
         
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     results = []
     success_count = 0
     
-    for idx, p in enumerate(pages):
+    def _send_one(p):
         p_id = p.get("id")
         p_name = p.get("name", p_id)
         p_token = p.get("access_token")
-        
         ok, msg = post_to_page(p_id, p_token, message)
-        if ok:
-            success_count += 1
-            results.append({"id": p_id, "name": p_name, "success": True, "message": msg})
-        else:
-            results.append({"id": p_id, "name": p_name, "success": False, "message": msg})
-            
-        if idx < len(pages) - 1:
-            time.sleep(delay)
+        return {"id": p_id, "name": p_name, "success": ok, "message": msg}
+
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        futures = [executor.submit(_send_one, p) for p in pages]
+        for f in as_completed(futures):
+            res = f.result()
+            results.append(res)
+            if res["success"]:
+                success_count += 1
+                
+    summary = f"បានបង្ហោះអត្ថបទជោគជ័យ {success_count}/{len(pages)} Facebook Pages!"
+    return (success_count > 0), summary, results
             
 def post_video_to_page(page_id, access_token, video_path_or_url, description=""):
     """
     បង្ហោះវីដេអូ (MP4) ចូលទៅកាន់ Facebook Page តាម Graph API
     គាំទ្រទាំង URL Pull (file_url) និង Local Multipart File Upload
+    ប្រើប្រាស់ graph-video.facebook.com ផ្លូវការ
     """
     page_id = (page_id or "").strip()
     access_token = (access_token or "").strip()
@@ -174,7 +179,7 @@ def post_video_to_page(page_id, access_token, video_path_or_url, description="")
     if not video_source:
         return False, "មិនបានបញ្ជាក់ File ឬ URL វីដេអូឡើយ"
         
-    url = f"{GRAPH_API_BASE}/{page_id}/videos"
+    url = f"https://graph-video.facebook.com/{GRAPH_API_VERSION}/{page_id}/videos"
     payload = {
         "description": description,
         "access_token": access_token
@@ -184,7 +189,7 @@ def post_video_to_page(page_id, access_token, video_path_or_url, description="")
         # Check if video_source is a public URL (URL Pull method)
         if video_source.startswith("http://") or video_source.startswith("https://"):
             payload["file_url"] = video_source
-            res = requests.post(url, data=payload, timeout=45)
+            res = requests.post(url, data=payload, timeout=30)
         else:
             if not os.path.exists(video_source):
                 return False, f"រកមិនឃើញ File វីដេអូ: {video_source}"
@@ -199,34 +204,38 @@ def post_video_to_page(page_id, access_token, video_path_or_url, description="")
             
         error = data.get("error", {})
         err_msg = error.get("message", f"HTTP {res.status_code}")
+        err_code = error.get("code")
+        if err_code == 100 or "No permission" in err_msg or "pages_manage_posts" in err_msg:
+            return False, "ខ្វះសិទ្ធិបង្ហោះ (Token ខ្វះ permission: 'pages_manage_posts' ឬ 'publish_video')។ សូមបន្ថែម Permission នេះក្នុង Graph API Explorer។"
         return False, f"បរាជ័យក្នុងការបង្ហោះវីដេអូ: {err_msg}"
     except Exception as e:
         return False, f"បញ្ហាបង្ហោះវីដេអូ: {str(e)}"
 
-def broadcast_video_to_pages(pages, video_path, description="", delay=1.0):
+def broadcast_video_to_pages(pages, video_path, description=""):
     """
-    បង្ហោះវីដេអូទៅកាន់ Facebook Pages ច្រើនក្នុងពេលតែមួយ
+    បង្ហោះវីដេអូទៅកាន់ Facebook Pages ច្រើនក្នុងពេលតែមួយតាមរយៈ Parallel Multi-Threading
     """
     if not pages or not isinstance(pages, list):
         return False, "គ្មាន Facebook Pages ត្រូវបានជ្រើសរើសឡើយ", []
         
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     results = []
     success_count = 0
     
-    for idx, p in enumerate(pages):
+    def _send_one_video(p):
         p_id = p.get("id")
         p_name = p.get("name", p_id)
         p_token = p.get("access_token")
-        
         ok, msg = post_video_to_page(p_id, p_token, video_path, description)
-        if ok:
-            success_count += 1
-            results.append({"id": p_id, "name": p_name, "success": True, "message": msg})
-        else:
-            results.append({"id": p_id, "name": p_name, "success": False, "message": msg})
-            
-        if idx < len(pages) - 1:
-            time.sleep(delay)
+        return {"id": p_id, "name": p_name, "success": ok, "message": msg}
+
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        futures = [executor.submit(_send_one_video, p) for p in pages]
+        for f in as_completed(futures):
+            res = f.result()
+            results.append(res)
+            if res["success"]:
+                success_count += 1
             
     summary = f"បានបង្ហោះវីដេអូជោគជ័យ {success_count}/{len(pages)} Facebook Pages!"
     return (success_count > 0), summary, results
