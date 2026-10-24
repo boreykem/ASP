@@ -111,11 +111,16 @@
             <div class="card-header">
               <div class="card-title-group">
                 <span class="card-icon">📝</span>
-                <h2 id="topics-title" class="card-title">ប្រធានបទស្គ្រីបប្រចាំថ្ងៃ (៥ ស្គ្រីប)</h2>
+                <h2 id="topics-title" class="card-title">ប្រធានបទស្គ្រីបប្រចាំថ្ងៃ (២ ស្គ្រីប)</h2>
               </div>
-              <div class="topic-header-actions">
-                <button id="btn-refresh-topics" class="btn btn-secondary btn-sm" title="Auto-Rotate 5 Fresh Topics">
-                  🎲 <span id="btn-refresh-topics-text">ប្តូរ ៥ ប្រធានបទថ្មី</span>
+              <div class="topic-header-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <!-- Count switcher: 2 Topics (Default) / 5 Topics -->
+                <div class="topic-count-toggle" style="display: inline-flex; background: rgba(255,255,255,0.06); padding: 3px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                  <button type="button" class="btn-count-opt active" id="btn-count-2" onclick="setTopicCount(2)" style="padding: 4px 10px; font-size: 0.82rem; border: none; border-radius: 6px; cursor: pointer; background: var(--accent, #3b82f6); color: #fff; font-weight: 600;">២ ប្រធានបទ</button>
+                  <button type="button" class="btn-count-opt" id="btn-count-5" onclick="setTopicCount(5)" style="padding: 4px 10px; font-size: 0.82rem; border: none; border-radius: 6px; cursor: pointer; background: transparent; color: #94a3b8; font-weight: 500;">៥ ប្រធានបទ</button>
+                </div>
+                <button id="btn-refresh-topics" class="btn btn-secondary btn-sm" title="Auto-Rotate Fresh Topics">
+                  🎲 <span id="btn-refresh-topics-text">ប្តូរ ២ ប្រធានបទថ្មី</span>
                 </button>
                 <button id="btn-clear-topics" class="btn btn-ghost btn-sm" title="Clear All to Type Custom">
                   🧹 <span id="btn-clear-topics-text">សម្អាត</span>
@@ -125,26 +130,26 @@
 
             <div class="card-body form-grid">
               <div class="info-note" id="topics-subtext">
-                💡 <strong>ចំណាំ៖</strong> ប្រធានបទទាំង ៥ នេះនឹងប្តូរថ្មីៗជារៀងរាល់ថ្ងៃដោយស្វ័យប្រវត្តិ។ លោកអ្នកអាចកែសម្រួល ឬវាយប្រធានបទផ្ទាល់ខ្លួនបានគ្រប់ពេល។
+                💡 <strong>ចំណាំ៖</strong> ប្រធានបទទាំង ២ នេះនឹងប្តូរថ្មីៗជារៀងរាល់ថ្ងៃដោយស្វ័យប្រវត្តិ។ លោកអ្នកអាចកែសម្រួល ឬវាយប្រធានបទផ្ទាល់ខ្លួនបានគ្រប់ពេល។
               </div>
 
-              <div class="topic-item">
+              <div class="topic-item" id="topic-item-1">
                 <span class="topic-badge">1</span>
                 <input type="text" id="topic-1" class="form-control topic-input" placeholder="ប្រធានបទទី ១ (ស្វ័យប្រវត្តិ)">
               </div>
-              <div class="topic-item">
+              <div class="topic-item" id="topic-item-2">
                 <span class="topic-badge">2</span>
                 <input type="text" id="topic-2" class="form-control topic-input" placeholder="ប្រធានបទទី ២ (ស្វ័យប្រវត្តិ)">
               </div>
-              <div class="topic-item">
+              <div class="topic-item hidden" id="topic-item-3">
                 <span class="topic-badge">3</span>
                 <input type="text" id="topic-3" class="form-control topic-input" placeholder="ប្រធានបទទី ៣ (ស្វ័យប្រវត្តិ)">
               </div>
-              <div class="topic-item">
+              <div class="topic-item hidden" id="topic-item-4">
                 <span class="topic-badge">4</span>
                 <input type="text" id="topic-4" class="form-control topic-input" placeholder="ប្រធានបទទី ៤ (ស្វ័យប្រវត្តិ)">
               </div>
-              <div class="topic-item">
+              <div class="topic-item hidden" id="topic-item-5">
                 <span class="topic-badge">5</span>
                 <input type="text" id="topic-5" class="form-control topic-input" placeholder="ប្រធានបទទី ៥ (ស្វ័យប្រវត្តិ)">
               </div>
@@ -642,6 +647,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- JavaScript -->
-  <script src="/static/js/app.js?v=20261024_18"></script>
+  <script src="/static/js/app.js?v=20261024_19"></script>
 </body>
 </html>

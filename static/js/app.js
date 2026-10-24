@@ -70,10 +70,10 @@ const translations = {
     catUniverse: "ការរកឃើញសកលលោក",
     catReligion: "សាសនា & ទស្សនវិជ្ជា",
     
-    topicsTitle: "ប្រធានបទស្គ្រីបប្រចាំថ្ងៃ (៥ ស្គ្រីប)",
-    btnRefreshTopics: "ប្តូរ ៥ ប្រធានបទថ្មី",
+    topicsTitle: "ប្រធានបទស្គ្រីបប្រចាំថ្ងៃ (២ ស្គ្រីប)",
+    btnRefreshTopics: "ប្តូរ ២ ប្រធានបទថ្មី",
     btnClearTopics: "សម្អាត",
-    topicsSubtext: "💡 <strong>ចំណាំ៖</strong> ប្រធានបទទាំង ៥ នេះនឹងប្តូរថ្មីៗជារៀងរាល់ថ្ងៃដោយស្វ័យប្រវត្តិ។ លោកអ្នកអាចកែសម្រួល ឬវាយប្រធានបទផ្ទាល់ខ្លួនបានគ្រប់ពេល។",
+    topicsSubtext: "💡 <strong>ចំណាំ៖</strong> ប្រធានបទទាំង ២ នេះនឹងប្តូរថ្មីៗជារៀងរាល់ថ្ងៃដោយស្វ័យប្រវត្តិ។ លោកអ្នកអាចកែសម្រួល ឬវាយប្រធានបទផ្ទាល់ខ្លួនបានគ្រប់ពេល។",
     topicPlaceholder: "ប្រធានបទ (ស្វ័យប្រវត្តិ)",
     
     btnRun: "ចាប់ផ្តើមបង្កើតស្គ្រីប និងផ្ញើចូល Telegram",
@@ -178,10 +178,10 @@ const translations = {
     catUniverse: "Universe Discoveries",
     catReligion: "Religion & Philosophy",
     
-    topicsTitle: "Daily Script Topics (5 Scripts)",
-    btnRefreshTopics: "Roll 5 New Topics",
+    topicsTitle: "Daily Script Topics (2 Scripts)",
+    btnRefreshTopics: "Roll 2 New Topics",
     btnClearTopics: "Clear",
-    topicsSubtext: "💡 <strong>Note:</strong> These 5 topics rotate daily automatically. You can edit or type custom topics anytime.",
+    topicsSubtext: "💡 <strong>Note:</strong> These 2 topics rotate daily automatically. You can edit or type custom topics anytime.",
     topicPlaceholder: "Topic (Auto-generated)",
     
     btnRun: "Start Generating & Broadcast to Telegram",
@@ -804,27 +804,90 @@ async function loadInitialConfig() {
 }
 
 // ==========================================
-// Refresh 5 Daily Rotating Topics
+// Daily Rotating Topics (Default: 2 Topics)
 // ==========================================
+let currentTopicCount = 2;
+
+function setTopicCount(count) {
+  currentTopicCount = parseInt(count) || 2;
+  const btn2 = document.getElementById("btn-count-2");
+  const btn5 = document.getElementById("btn-count-5");
+  
+  if (btn2 && btn5) {
+    if (currentTopicCount === 2) {
+      btn2.classList.add("active");
+      btn2.style.background = "var(--accent, #3b82f6)";
+      btn2.style.color = "#fff";
+      btn2.style.fontWeight = "600";
+      
+      btn5.classList.remove("active");
+      btn5.style.background = "transparent";
+      btn5.style.color = "#94a3b8";
+      btn5.style.fontWeight = "500";
+    } else {
+      btn5.classList.add("active");
+      btn5.style.background = "var(--accent, #3b82f6)";
+      btn5.style.color = "#fff";
+      btn5.style.fontWeight = "600";
+      
+      btn2.classList.remove("active");
+      btn2.style.background = "transparent";
+      btn2.style.color = "#94a3b8";
+      btn2.style.fontWeight = "500";
+    }
+  }
+  
+  for (let i = 1; i <= 5; i++) {
+    const item = document.getElementById(`topic-item-${i}`);
+    if (item) {
+      if (i <= currentTopicCount) {
+        item.classList.remove("hidden");
+      } else {
+        item.classList.add("hidden");
+        const inp = document.getElementById(`topic-${i}`);
+        if (inp) inp.value = "";
+      }
+    }
+  }
+  
+  setTxt("topics-title", currentLang === "km" ? `ប្រធានបទស្គ្រីបប្រចាំថ្ងៃ (${currentTopicCount} ស្គ្រីប)` : `Daily Script Topics (${currentTopicCount} Scripts)`);
+  setTxt("btn-refresh-topics-text", currentLang === "km" ? `ប្តូរ ${currentTopicCount} ប្រធានបទថ្មី` : `Roll ${currentTopicCount} New Topics`);
+  const topicsSubtext = document.getElementById("topics-subtext");
+  if (topicsSubtext) {
+    topicsSubtext.innerHTML = currentLang === "km"
+      ? `💡 <strong>ចំណាំ៖</strong> ប្រធានបទទាំង ${currentTopicCount} នេះនឹងប្តូរថ្មីៗជារៀងរាល់ថ្ងៃដោយស្វ័យប្រវត្តិ។ លោកអ្នកអាចកែសម្រួល ឬវាយប្រធានបទផ្ទាល់ខ្លួនបានគ្រប់ពេល។`
+      : `💡 <strong>Note:</strong> These ${currentTopicCount} topics rotate daily automatically. You can edit or type custom topics anytime.`;
+  }
+  
+  refreshDailyTopics();
+}
+window.setTopicCount = setTopicCount;
+
 async function refreshDailyTopics() {
   const btn = document.getElementById("btn-refresh-topics");
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
   
   try {
-    const res = await fetch(`/api/daily-topics?lang=${currentLang}`);
+    const res = await fetch(`/api/daily-topics?lang=${currentLang}&count=${currentTopicCount}`);
     const data = await res.json();
     if (data.success && data.topics) {
-      data.topics.forEach((t, i) => {
-        const el = document.getElementById(`topic-${i+1}`);
-        if (el) el.value = t;
-      });
-      appendLog(`[Topics] 🎲 ${currentLang === 'km' ? 'បានបង្វិល ៥ ប្រធានបទថ្មីៗពី ៧ វិស័យ' : 'Rotated 5 fresh daily topics from the 7 categories'}: (${data.source || 'Auto'})`, "info");
-      showToast(currentLang === 'km' ? "បានបង្វិល ៥ ប្រធានបទថ្មីៗ!" : "Loaded 5 fresh topics!", "success");
+      for (let i = 1; i <= 5; i++) {
+        const el = document.getElementById(`topic-${i}`);
+        if (el) {
+          if (i <= currentTopicCount && data.topics[i-1]) {
+            el.value = data.topics[i-1];
+          } else if (i > currentTopicCount) {
+            el.value = "";
+          }
+        }
+      }
+      appendLog(`[Topics] 🎲 ${currentLang === 'km' ? `បានបង្វិល ${data.topics.length} ប្រធានបទថ្មីៗពី ៧ វិស័យ` : `Rotated ${data.topics.length} fresh daily topics from the 7 categories`}: (${data.source || 'Auto'})`, "info");
+      showToast(currentLang === 'km' ? `បានបង្វិល ${data.topics.length} ប្រធានបទថ្មីៗ!` : `Loaded ${data.topics.length} fresh topics!`, "success");
     }
   } catch (err) {
     console.error("Error fetching daily topics:", err);
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -885,8 +948,9 @@ async function saveSettings() {
 
 function getTopicValues() {
   const topics = [];
-  for (let i = 1; i <= 5; i++) {
-    const val = document.getElementById(`topic-${i}`).value.trim();
+  for (let i = 1; i <= currentTopicCount; i++) {
+    const el = document.getElementById(`topic-${i}`);
+    const val = el ? el.value.trim() : "";
     if (val) topics.push(val);
   }
   return topics;
@@ -915,7 +979,7 @@ async function runBatchGeneration() {
   
   if (progContainer) progContainer.classList.remove("hidden");
   if (progFill) progFill.style.width = "15%";
-  if (progStatus) progStatus.textContent = currentLang === "km" ? "កំពុងទាក់ទង Gemini AI បង្កើតស្គ្រីបទាំង ៥..." : "Calling Gemini AI for 5 scripts...";
+  if (progStatus) progStatus.textContent = currentLang === "km" ? `កំពុងទាក់ទង Gemini AI បង្កើតស្គ្រីបទាំង ${currentTopicCount}...` : `Calling Gemini AI for ${currentTopicCount} scripts...`;
   if (progPercent) progPercent.textContent = "15%";
   
   appendLog(`[${new Date().toLocaleTimeString()}] ${currentLang === 'km' ? 'ចាប់ផ្តើមដំណើរការបង្កើតស្គ្រីប...' : 'Starting script automation...'}`, "system");
@@ -925,7 +989,7 @@ async function runBatchGeneration() {
   const autoApproval = document.getElementById("gen-auto-approval")?.checked ?? true;
   
   try {
-    // Step 1: Generate 5 AI scripts in parallel (~1.5 - 2.5s)
+    // Step 1: Generate AI scripts in parallel (~1.5s)
     const res = await fetch("/api/generate-batch", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -936,6 +1000,7 @@ async function runBatchGeneration() {
         format: format,
         tone: tone,
         topics: topics,
+        count: currentTopicCount,
         lang: currentLang,
         auto_video: false, // Orchestrated step-by-step to prevent Vercel 10s timeouts
         auto_approval: autoApproval
@@ -974,7 +1039,7 @@ async function runBatchGeneration() {
     
     if (progFill) progFill.style.width = autoVideo ? "35%" : "100%";
     if (progPercent) progPercent.textContent = autoVideo ? "35%" : "100%";
-    if (progStatus) progStatus.textContent = currentLang === "km" ? "បង្កើតស្គ្រីបទាំង ៥ រួចរាល់!" : "5 scripts generated!";
+    if (progStatus) progStatus.textContent = currentLang === "km" ? `បង្កើតស្គ្រីបទាំង ${total} រួចរាល់!` : `${total} scripts generated!`;
     
     // Step 2: If autoVideo is checked, render videos step-by-step (2-3s each, never hangs)
     if (autoVideo) {
@@ -1028,7 +1093,7 @@ async function runBatchGeneration() {
       appendLog(`[${new Date().toLocaleTimeString()}] 🎉 ${currentLang === 'km' ? 'បញ្ចប់ការងារទាំងស្រុង! សូមចូលពិនិត្យ Telegram Bot ដើម្បីចុច Approve វីដេអូមុននឹងផ្សាយឡើង Facebook Pages ទាំង ២៣។' : 'Batch finished! Check Telegram to approve videos before posting to Facebook.'}`, "success");
       showToast(currentLang === 'km' ? `បានបញ្ចប់! ផលិតវីដេអូបាន ${videosDone}/${successfulScripts.length}` : `Finished! Created ${videosDone} videos`, "success");
     } else {
-      showToast(currentLang === 'km' ? "បង្កើតស្គ្រីបទាំង ៥ ជោគជ័យ!" : "5 scripts generated successfully!", "success");
+      showToast(currentLang === 'km' ? `បង្កើតស្គ្រីបទាំង ${total} ជោគជ័យ!` : `${total} scripts generated successfully!`, "success");
     }
     
     // Refresh history so generated scripts and videos appear immediately

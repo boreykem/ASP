@@ -236,9 +236,10 @@ def update_config():
 def api_get_daily_topics():
     cfg = load_config()
     lang = request.args.get("lang") or cfg.get("language", "km")
+    count = int(request.args.get("count", 2))
     key = cfg.get("gemini_key")
-    ok, topics, source = topics_engine.get_daily_diverse_topics(key, lang=lang)
-    return jsonify({"success": ok, "topics": topics, "source": source})
+    ok, topics, source = topics_engine.get_daily_diverse_topics(key, lang=lang, count=count)
+    return jsonify({"success": ok, "topics": topics, "source": source, "count": len(topics)})
 
 @app.route("/api/categories", methods=["GET"])
 def api_get_categories():
@@ -257,11 +258,12 @@ def api_generate_batch():
     lang = data.get("lang") or cfg.get("language", "km")
     topics = data.get("topics", [])
     
-    # ប្រសិនបើអ្នកប្រើប្រាស់មិនបានវាយប្រធានបទ ត្រូវទាញយក ៥ ប្រធានបទស្វ័យប្រវត្តពី ៧ វិស័យ
+    # ប្រសិនបើអ្នកប្រើប្រាស់មិនបានវាយប្រធានបទ ត្រូវទាញយក ២ ប្រធានបទស្វ័យប្រវត្តពី ៧ វិស័យ (Default: 2 topics)
     clean_topics = [t.strip() for t in topics if t and t.strip()]
     if not clean_topics:
-        _, auto_topics, _ = topics_engine.get_daily_diverse_topics(key, lang=lang)
-        clean_topics = auto_topics[:5]
+        req_count = int(data.get("count", 2))
+        _, auto_topics, _ = topics_engine.get_daily_diverse_topics(key, lang=lang, count=req_count)
+        clean_topics = auto_topics[:req_count]
     
     # Save active credentials
     cfg["gemini_key"] = key

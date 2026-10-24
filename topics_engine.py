@@ -68,19 +68,21 @@ CURATED_TOPICS = {
     ]
 }
 
-def get_daily_diverse_topics(api_key, lang="km"):
+def get_daily_diverse_topics(api_key, lang="km", count=2):
     """
-    បង្កើត ៥ ប្រធានបទប្លែកៗគ្នាជារៀងរាល់ថ្ងៃ ជ្រើសរើសចេញពីវិស័យទាំង ៧។
+    បង្កើតប្រធានបទប្លែកៗគ្នាជារៀងរាល់ថ្ងៃ ជ្រើសរើសចេញពីវិស័យទាំង ៧ (លំនាំដើម: ២ ប្រធានបទ)។
     ព្យាយាមហៅ AI ជាមុន បើ quota ពេញ ប្រើក្បួន Dynamic Rotation តាមថ្ងៃនៃឆ្នាំ។
     """
     api_key = (api_key or "").strip().strip("'").strip('"')
+    count = int(count) if count else 2
+    count = max(1, min(count, 5))
     
     # 1. សាកល្បងហៅ Gemini AI ប្រសិនបើមាន API Key
     if api_key:
         if lang == "en":
             prompt = (
-                "Generate exactly 5 distinct, engaging, viral video topics for today. "
-                "Pick 5 DIFFERENT categories among these 7 fields:\n"
+                f"Generate exactly {count} distinct, engaging, viral video topics for today. "
+                f"Pick {count} DIFFERENT categories among these 7 fields:\n"
                 "1. Education\n"
                 "2. Economy & Finance\n"
                 "3. Society & Mindset\n"
@@ -90,12 +92,12 @@ def get_daily_diverse_topics(api_key, lang="km"):
                 "7. Religion & Life Philosophy\n\n"
                 "Requirements:\n"
                 "- Write click-worthy, curiosity-piquing titles.\n"
-                "- Return EXACTLY 5 lines, 1 topic per line, with no numbering (no 1. 2.), no bullets, no category prefix."
+                f"- Return EXACTLY {count} lines, 1 topic per line, with no numbering (no 1. 2.), no bullets, no category prefix."
             )
         else:
             prompt = (
-                "សូមជួយបង្កើតប្រធានបទស្គ្រីបវីដេអូខ្លីដែលទាក់ទាញ ក្តៅៗ និងប្លែកៗចំនួន ៥ សម្រាប់ថ្ងៃនេះ។\n"
-                "ប្រធានបទនីមួយៗត្រូវជ្រើសរើសចេញពីវិស័យធំៗទាំង ៧ ខាងក្រោម (ជ្រើសយក ៥ វិស័យខុសៗគ្នា)៖\n"
+                f"សូមជួយបង្កើតប្រធានបទស្គ្រីបវីដេអូខ្លីដែលទាក់ទាញ ក្តៅៗ និងប្លែកៗចំនួន {count} សម្រាប់ថ្ងៃនេះ។\n"
+                f"ប្រធានបទនីមួយៗត្រូវជ្រើសរើសចេញពីវិស័យធំៗទាំង ៧ ខាងក្រោម (ជ្រើសយក {count} វិស័យខុសៗគ្នា)៖\n"
                 "១. ការអប់រំ (Education)\n"
                 "២. សេដ្ឋកិច្ច និងហិរញ្ញវត្ថុ (Economy & Finance)\n"
                 "៣. សង្គម និងការគិត (Society & Mindset)\n"
@@ -105,7 +107,7 @@ def get_daily_diverse_topics(api_key, lang="km"):
                 "៧. សាសនា និងទស្សនវិជ្ជា (Religion & Philosophy)\n\n"
                 "លក្ខខណ្ឌ៖\n"
                 "- ចំណងជើងត្រូវមានភាពទាក់ទាញ និងរស់រវើក\n"
-                "- ផ្តល់ចម្លើយជាភាសាខ្មែរ ត្រឹមតែ ៥ បន្ទាត់ប៉ុណ្ណោះ (១ បន្ទាត់ ១ ប្រធានបទ ហាមដាក់លេខរៀង 1 2 3 ឬសញ្ញា bullet)។"
+                f"- ផ្តល់ចម្លើយជាភាសាខ្មែរ ត្រឹមតែ {count} បន្ទាត់ប៉ុណ្ណោះ (១ បន្ទាត់ ១ ប្រធានបទ ហាមដាក់លេខរៀង 1 2 3 ឬសញ្ញា bullet)។"
             )
 
         # Try models
@@ -115,28 +117,26 @@ def get_daily_diverse_topics(api_key, lang="km"):
                 res = client.models.generate_content(model=m, contents=prompt)
                 if res and res.text:
                     lines = [l.strip('- *•1234567890. ') for l in res.text.strip().split('\n') if l.strip()]
-                    if len(lines) >= 5:
-                        return True, lines[:5], "AI Generated"
+                    if len(lines) >= count:
+                        return True, lines[:count], "AI Generated"
             except Exception:
                 continue
 
     # 2. Dynamic Rotation ឆ្លាតវៃតាមកាលបរិច្ឆេទនៃថ្ងៃ (Day of Year Rotation)
-    # ធានាថារាល់ថ្ងៃ ៥ ប្រធានបទនឹងប្តូរថ្មីៗជានិច្ច មិនដែលជាន់គ្នាឡើយ!
     day_of_year = datetime.datetime.now().timetuple().tm_yday
     available_cat_keys = list(CURATED_TOPICS.keys())
     
     # Shuffle or rotate categories based on day
     shuffled_cats = available_cat_keys.copy()
     random.Random(day_of_year).shuffle(shuffled_cats)
-    selected_cats = shuffled_cats[:5]
+    selected_cats = shuffled_cats[:count]
     
     topics = []
     for cat_key in selected_cats:
         cat_topics = CURATED_TOPICS[cat_key]
-        # Pick unique topic per category rotating by day
         idx = (day_of_year + len(topics)) % len(cat_topics)
         t_obj = cat_topics[idx]
         topic_text = t_obj["km"] if lang == "km" else t_obj["en"]
         topics.append(topic_text)
         
-    return True, topics, "Daily Category Rotation"
+    return True, topics[:count], "Daily Category Rotation"
