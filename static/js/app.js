@@ -261,11 +261,42 @@ function detectFormatKey(formatVal) {
   return "video_overview";
 }
 
-function updateFormatHelperCard(formatVal, animate = false) {
-  const select = document.getElementById("video-format");
-  const val = formatVal || (select ? select.value : "");
-  const key = detectFormatKey(val);
+function getToneDirective(toneVal) {
+  const t = (toneVal || "").toLowerCase();
+  if (t.includes("អប់រំ") || t.includes("educational")) {
+    return {
+      nameKm: "អប់រំ & ចំណេះដឹង",
+      nameEn: "Educational",
+      promptEn: "Delivery Tone: Clear, informative, authoritative, and educational (អប់រំ & ចំណេះដឹង). Unpack every concept with articulate pacing and pedagogical depth.",
+      promptKm: "ទឹកដមសម្លេង៖ អប់រំ & ចំណេះដឹង (Educational) - ពិរោះ ច្បាស់ៗ មានគរុកោសល្យ និងពន្យល់ស៊ីជម្រៅងាយយល់។"
+    };
+  }
+  if (t.includes("និទាន") || t.includes("storytelling") || t.includes("emotional")) {
+    return {
+      nameKm: "និទានរឿង",
+      nameEn: "Storytelling",
+      promptEn: "Delivery Tone: Deeply immersive, emotional storytelling and cinematic narrative (និទានរឿង & អារម្មណ៍ស៊ីជម្រៅ). Deliver with evocative pacing and heartfelt expression.",
+      promptKm: "ទឹកដមសម្លេង៖ និទានរឿង (Storytelling & Emotional) - រំជួលចិត្ត ទាក់ទាញអារម្មណ៍ និងរៀបរាប់ដំណើររឿងយ៉ាងជក់ចិត្ត។"
+    };
+  }
+  // Default: Hook & Catchy
+  return {
+    nameKm: "ទាក់ទាញ & រំភើប",
+    nameEn: "Hook & Catchy",
+    promptEn: "Delivery Tone: High-energy, exciting, and captivating (ទាក់ទាញ & រំភើប). Keep the audience thoroughly hooked with engaging enthusiasm.",
+    promptKm: "ទឹកដមសម្លេង៖ ទាក់ទាញ & រំភើប (Hook & Catchy) - រស់រវើក ស្វាហាប់ ជំរុញការចង់ដឹងចង់ឃើញ និងទាក់ទាញតាំងពីដើមដល់ចប់។"
+  };
+}
+
+function updateFormatHelperCard(formatVal, toneVal, animate = false) {
+  const formatSelect = document.getElementById("video-format");
+  const toneSelect = document.getElementById("video-tone");
+  const fVal = formatVal || (formatSelect ? formatSelect.value : "");
+  const tVal = toneVal || (toneSelect ? toneSelect.value : "");
+  
+  const key = detectFormatKey(fVal);
   const data = FORMAT_DATA[key] || FORMAT_DATA.video_overview;
+  const toneData = getToneDirective(tVal);
   
   const iconEl = document.getElementById("format-helper-icon");
   const titleEl = document.getElementById("notebooklm-card-title");
@@ -275,9 +306,21 @@ function updateFormatHelperCard(formatVal, animate = false) {
   const cardEl = document.getElementById("format-helper-card");
   
   if (iconEl) iconEl.textContent = data.icon;
-  if (titleEl) titleEl.textContent = currentLang === "km" ? data.titleKm : data.titleEn;
+  if (titleEl) {
+    const toneBadge = currentLang === "km" ? toneData.nameKm : toneData.nameEn;
+    titleEl.textContent = `${currentLang === "km" ? data.titleKm : data.titleEn} (${toneBadge})`;
+  }
   if (descEl) descEl.innerHTML = currentLang === "km" ? data.descKm : data.descEn;
-  if (codeEl) codeEl.textContent = data.prompt;
+  
+  // Combine format prompt with the active tone directive so the user sees the script change!
+  let combinedPrompt = "";
+  if (key === "video_overview" || key === "podcast") {
+    combinedPrompt = `${data.prompt}\n\n• ${currentLang === "km" ? toneData.promptKm : toneData.promptEn}`;
+  } else {
+    combinedPrompt = `${data.prompt}\n• [${currentLang === "km" ? toneData.promptKm : toneData.promptEn}]`;
+  }
+  
+  if (codeEl) codeEl.textContent = combinedPrompt;
   if (btnTextEl) btnTextEl.textContent = currentLang === "km" ? data.btnKm : data.btnEn;
   
   if (animate && cardEl) {
@@ -289,7 +332,8 @@ function updateFormatHelperCard(formatVal, animate = false) {
 
 function handleFormatChange(e) {
   const val = e.target.value;
-  updateFormatHelperCard(val, true);
+  const tVal = document.getElementById("video-tone")?.value;
+  updateFormatHelperCard(val, tVal, true);
   
   const key = detectFormatKey(val);
   const data = FORMAT_DATA[key] || FORMAT_DATA.video_overview;
@@ -302,6 +346,23 @@ function handleFormatChange(e) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ format: val })
   }).catch(err => console.error("Error auto-saving format:", err));
+}
+
+function handleToneChange(e) {
+  const tVal = e.target.value;
+  const fVal = document.getElementById("video-format")?.value;
+  updateFormatHelperCard(fVal, tVal, true);
+  
+  const toneData = getToneDirective(tVal);
+  const toneName = currentLang === "km" ? toneData.nameKm : toneData.nameEn;
+  showToast(currentLang === "km" ? `បានប្តូរទឹកដម៖ ${toneName}` : `Switched tone to: ${toneName}`, "info");
+  
+  // Auto-save tone to backend
+  fetch("/api/config", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ tone: tVal })
+  }).catch(err => console.error("Error auto-saving tone:", err));
 }
 
 function ensureFormatOptions() {
@@ -429,7 +490,7 @@ function applyLanguage(lang) {
   document.getElementById("btn-delete-text").textContent = t.btnDelete;
   
   // Dynamic Format Helper Card
-  updateFormatHelperCard(document.getElementById("video-format")?.value, false);
+  updateFormatHelperCard(document.getElementById("video-format")?.value, document.getElementById("video-tone")?.value, false);
   setTxt("btn-copy-notebooklm-text", t.btnCopyNotebooklm);
   
   // Scheduler Tab
@@ -516,6 +577,12 @@ function setupEventListeners() {
     formatSelect.addEventListener("change", handleFormatChange);
   }
   
+  // Tone dropdown change listener
+  const toneSelect = document.getElementById("video-tone");
+  if (toneSelect) {
+    toneSelect.addEventListener("change", handleToneChange);
+  }
+  
   // Format Guidance Prompt Copy
   const btnCopyFormat = document.getElementById("btn-copy-format-prompt");
   if (btnCopyFormat) btnCopyFormat.addEventListener("click", copyActiveFormatPrompt);
@@ -551,8 +618,10 @@ async function loadInitialConfig() {
       if (c.format) {
         document.getElementById("video-format").value = c.format;
       }
-      updateFormatHelperCard(document.getElementById("video-format").value, false);
-      if (c.tone) document.getElementById("video-tone").value = c.tone;
+      if (c.tone) {
+        document.getElementById("video-tone").value = c.tone;
+      }
+      updateFormatHelperCard(document.getElementById("video-format").value, document.getElementById("video-tone").value, false);
       
       // If user had custom saved topics, load them. Otherwise load daily fresh rotating topics
       if (c.topics && Array.isArray(c.topics) && c.topics.length > 0) {
