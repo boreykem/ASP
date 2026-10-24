@@ -349,6 +349,14 @@ def api_verify_facebook():
     ok, msg = facebook_service.verify_page_connection(page_id, access_token)
     return jsonify({"success": ok, "message": msg})
 
+@app.route("/api/facebook/pages", methods=["POST"])
+def api_get_facebook_pages():
+    data = request.json or {}
+    cfg = load_config()
+    token = data.get("access_token") or cfg.get("facebook_access_token")
+    ok, msg, pages = facebook_service.get_user_pages(token)
+    return jsonify({"success": ok, "message": msg, "pages": pages})
+
 @app.route("/api/scheduler", methods=["GET"])
 def api_get_scheduler():
     cfg = load_config()

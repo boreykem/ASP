@@ -38,6 +38,9 @@ const translations = {
     lblFbPageToken: "Facebook Page Access Token:",
     btnVerifyFb: "ផ្ទៀងផ្ទាត់ Facebook Page",
     btnPostFacebook: "Post Facebook",
+    btnFetchFbPages: "ទាញយក Pages របស់ខ្ញុំ",
+    lblFbPageSelect: "ជ្រើសរើស Page ដែលចង់ Post (Select Page):",
+    msgPagesLoaded: "បានទាញយក Pages ទាំងអស់ជោគជ័យ!",
     msgFbPosted: "បានបង្ហោះឡើង Facebook Page ជោគជ័យ!",
     msgFbVerified: "បានភ្ជាប់ទៅកាន់ Facebook Page ជោគជ័យ!",
     
@@ -131,6 +134,9 @@ const translations = {
     lblFbPageToken: "Facebook Page Access Token:",
     btnVerifyFb: "Verify Facebook Page",
     btnPostFacebook: "Post to Facebook",
+    btnFetchFbPages: "Fetch My Pages",
+    lblFbPageSelect: "Select Page to Post:",
+    msgPagesLoaded: "Loaded all Facebook Pages successfully!",
     msgFbPosted: "Successfully posted to Facebook Page!",
     msgFbVerified: "Successfully connected to Facebook Page!",
     
@@ -481,6 +487,8 @@ function applyLanguage(lang) {
   setTxt("fb-auto-desc", t.fbAutoDesc);
   setTxt("lbl-fb-page-id", t.lblFbPageId);
   setTxt("lbl-fb-page-token", t.lblFbPageToken);
+  setTxt("lbl-fb-page-select", t.lblFbPageSelect);
+  setTxt("btn-fetch-fb-pages-text", t.btnFetchFbPages);
   setTxt("btn-verify-fb-text", t.btnVerifyFb);
   setTxt("btn-post-facebook-text", t.btnPostFacebook);
   
@@ -650,6 +658,12 @@ function setupEventListeners() {
   
   const btnVerifyFb = document.getElementById("btn-verify-fb");
   if (btnVerifyFb) btnVerifyFb.addEventListener("click", verifyFacebookPage);
+  
+  const btnFetchFb = document.getElementById("btn-fetch-fb-pages");
+  if (btnFetchFb) btnFetchFb.addEventListener("click", fetchFacebookPages);
+  
+  const fbSelect = document.getElementById("fb-page-select");
+  if (fbSelect) fbSelect.addEventListener("change", handleFacebookPageSelect);
   
   document.getElementById("btn-delete-script").addEventListener("click", deleteSelectedScript);
   
@@ -1111,6 +1125,83 @@ async function verifyFacebookPage() {
     }
   } finally {
     if (btn) btn.disabled = false;
+  }
+}
+
+let fbPagesCache = [];
+
+async function fetchFacebookPages() {
+  const token = document.getElementById("fb-page-token")?.value.trim();
+  const btn = document.getElementById("btn-fetch-fb-pages");
+  const statusEl = document.getElementById("fb-verify-status");
+  const selectEl = document.getElementById("fb-page-select");
+  
+  if (!token) {
+    showToast(currentLang === "km" ? "សូមបញ្ចូល Facebook Access Token ជាមុនសិន!" : "Please enter your Facebook Access Token first!", "error");
+    return;
+  }
+  
+  if (btn) btn.disabled = true;
+  if (statusEl) {
+    statusEl.textContent = currentLang === "km" ? "កំពុងទាញយក Pages..." : "Fetching pages...";
+    statusEl.style.color = "#94a3b8";
+  }
+  
+  try {
+    const res = await fetch("/api/facebook/pages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ access_token: token })
+    });
+    const data = await res.json();
+    if (data.success && data.pages && data.pages.length > 0) {
+      fbPagesCache = data.pages;
+      selectEl.innerHTML = `<option value="">-- ${currentLang === 'km' ? 'សូមជ្រើសរើស Page (' + data.pages.length + ' Pages)' : 'Choose a Page (' + data.pages.length + ' Pages)'} --</option>`;
+      data.pages.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = `${p.name} (ID: ${p.id})`;
+        selectEl.appendChild(opt);
+      });
+      if (statusEl) {
+        statusEl.textContent = `✅ ${currentLang === 'km' ? 'បានរកឃើញ ' + data.pages.length + ' Pages' : 'Found ' + data.pages.length + ' Pages'}`;
+        statusEl.style.color = "#34d399";
+      }
+      showToast(translations[currentLang].msgPagesLoaded, "success");
+    } else {
+      if (statusEl) {
+        statusEl.textContent = "❌ " + (data.message || "No pages found");
+        statusEl.style.color = "#ef4444";
+      }
+      showToast(data.message || "Failed to load pages", "error");
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = "❌ Error: " + err.message;
+      statusEl.style.color = "#ef4444";
+    }
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function handleFacebookPageSelect(e) {
+  const selectedId = e.target.value;
+  if (!selectedId) return;
+  const page = fbPagesCache.find(p => p.id === selectedId);
+  if (page) {
+    const idInput = document.getElementById("fb-page-id");
+    const tokenInput = document.getElementById("fb-page-token");
+    const statusEl = document.getElementById("fb-verify-status");
+    if (idInput) idInput.value = page.id;
+    if (page.access_token && tokenInput) {
+      tokenInput.value = page.access_token;
+    }
+    if (statusEl) {
+      statusEl.textContent = `✅ បានជ្រើសរើស: ${page.name}`;
+      statusEl.style.color = "#34d399";
+    }
+    showToast(currentLang === "km" ? `បានជ្រើសរើស Page៖ ${page.name}` : `Selected Page: ${page.name}`, "info");
   }
 }
 

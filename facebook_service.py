@@ -83,3 +83,37 @@ def post_to_page(page_id, access_token, message, link=None):
         return False, f"បរាជ័យក្នុងការបង្ហោះ: {err_msg}"
     except Exception as e:
         return False, f"បញ្ហាភ្ជាប់បណ្តាញ: {str(e)}"
+
+def get_user_pages(access_token):
+    """
+    ទាញយកបញ្ជី Facebook Pages ទាំងអស់ដែលគណនីនេះគ្រប់គ្រង (ព្រមទាំង Page Access Tokens ផ្ទាល់)
+    """
+    access_token = (access_token or "").strip()
+    if not access_token:
+        return False, "Access Token មិនអាចទទេបានឡើយ", []
+        
+    url = f"{GRAPH_API_BASE}/me/accounts"
+    params = {
+        "access_token": access_token,
+        "limit": 100
+    }
+    try:
+        res = requests.get(url, params=params, timeout=20)
+        data = res.json()
+        if res.status_code == 200 and "data" in data:
+            raw_pages = data["data"]
+            pages = []
+            for p in raw_pages:
+                pages.append({
+                    "id": p.get("id"),
+                    "name": p.get("name"),
+                    "category": p.get("category"),
+                    "access_token": p.get("access_token"),
+                    "tasks": p.get("tasks", [])
+                })
+            return True, f"បានរកឃើញ {len(pages)} Facebook Pages!", pages
+            
+        err = data.get("error", {})
+        return False, err.get("message", f"HTTP {res.status_code}"), []
+    except Exception as e:
+        return False, str(e), []

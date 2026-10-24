@@ -438,26 +438,37 @@
             </label>
           </div>
 
-          <!-- Facebook Page ID -->
-          <div class="form-group">
-            <label for="fb-page-id" id="lbl-fb-page-id">Facebook Page ID:</label>
-            <input type="text" id="fb-page-id" class="form-control" placeholder="ឧទាហរណ៍៖ 109283746501928">
-          </div>
-
           <!-- Facebook Page Access Token -->
           <div class="form-group">
-            <label for="fb-page-token" id="lbl-fb-page-token">Facebook Page Access Token:</label>
+            <label for="fb-page-token" id="lbl-fb-page-token">Facebook Access Token (User ឬ Page Token):</label>
             <div class="input-with-button">
-              <input type="password" id="fb-page-token" class="form-control" placeholder="EAA... ឬ Page Access Token របស់អ្នក">
+              <input type="password" id="fb-page-token" class="form-control" placeholder="EAA... ឬ Access Token របស់អ្នក">
               <button type="button" class="eye-btn" data-target="fb-page-token" title="Toggle Visibility">👁</button>
             </div>
           </div>
 
-          <div style="display: flex; gap: 0.75rem; align-items: center; margin: 0.25rem 0;">
+          <div style="display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin: 0.35rem 0;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-fetch-fb-pages" title="ទាញយក Pages ទាំងអស់ពី Token">
+              📥 <span id="btn-fetch-fb-pages-text">ទាញយក Pages របស់ខ្ញុំ</span>
+            </button>
             <button type="button" class="btn btn-secondary btn-sm" id="btn-verify-fb" title="ផ្ទៀងផ្ទាត់ការតភ្ជាប់ Facebook Page">
-              🔍 <span id="btn-verify-fb-text">ផ្ទៀងផ្ទាត់ Facebook Page</span>
+              🔍 <span id="btn-verify-fb-text">ផ្ទៀងផ្ទាត់ Page</span>
             </button>
             <span id="fb-verify-status" class="text-muted" style="font-size: 0.85rem;"></span>
+          </div>
+
+          <!-- Select Page Dropdown (Auto-populated from Token) -->
+          <div class="form-group" id="fb-page-select-group">
+            <label for="fb-page-select" id="lbl-fb-page-select">ជ្រើសរើស Page ដែលចង់ Post (Select Page):</label>
+            <select id="fb-page-select" class="form-control">
+              <option value="">-- ចុច 'ទាញយក Pages' ឬវាយបញ្ចូល Page ID ខាងក្រោម --</option>
+            </select>
+          </div>
+
+          <!-- Facebook Page ID -->
+          <div class="form-group">
+            <label for="fb-page-id" id="lbl-fb-page-id">Facebook Page ID:</label>
+            <input type="text" id="fb-page-id" class="form-control" placeholder="ឧទាហរណ៍៖ 109283746501928">
           </div>
 
           <!-- Security Privacy Banner -->
