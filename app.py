@@ -519,6 +519,81 @@ def api_broadcast_video_facebook():
         ok, summary, results = facebook_service.broadcast_video_to_pages(pages_to_post, video_target, description)
         return jsonify({"success": ok, "message": summary, "results": results})
 
+@app.route("/api/video/veo", methods=["POST"])
+def api_generate_video_veo():
+    import veo_service
+    import video_engine
+    
+    data = request.json or {}
+    script_id = data.get("script_id")
+    script_text = data.get("script_text", "")
+    topic = data.get("topic", "")
+    
+    if script_id:
+        s = database.get_script_by_id(script_id)
+        if s:
+            script_text = s.get("content", "")
+            topic = s.get("topic", topic)
+            
+    cfg = load_config()
+    api_key = cfg.get("gemini_key")
+    if not api_key:
+        return jsonify({"success": False, "error": "សូមកំណត់ Gemini API Key ក្នុង Settings ជាមុនសិន!"}), 400
+        
+    prompt = veo_service.generate_veo_prompt_from_script(script_text, topic)
+    ok, result, info = veo_service.generate_video_with_veo(api_key, prompt, aspect_ratio="9:16")
+    
+    if ok:
+        filename = os.path.basename(result)
+        video_url = f"/static/videos/{filename}"
+        return jsonify({
+            "success": True,
+            "message": "បានបង្កើតវីដេអូតាម Google Veo AI ជោគជ័យ!",
+            "video_url": video_url,
+            "filename": filename,
+            "engine": "google_veo"
+        })
+    else:
+        # Graceful fallback: If Veo is on free tier quota or model unavailable,
+        # automatically generate high-definition Reels video using internal engine
+        if info in ["free_tier_quota", "model_unavailable"] and script_text:
+            try:
+                vid_path = video_engine.create_reels_video(script_text=script_text)
+                filename = os.path.basename(vid_path)
+                return jsonify({
+                    "success": True,
+                    "message": "💡 Google Veo កំពុងកំណត់សិទ្ធិលើ Free Tier (ប្រព័ន្ធបានប្តូរមកបង្កើតវីដេអូ Reels 9:16 ជូនដោយឥតគិតថ្លៃជោគជ័យ!)",
+                    "video_url": f"/static/videos/{filename}",
+                    "filename": filename,
+                    "engine": "local_fallback"
+                })
+            except Exception as e_fall:
+                return jsonify({"success": False, "error": f"{result} (Fallback Error: {str(e_fall)})"}), 500
+        return jsonify({"success": False, "error": result}), 400
+
+@app.route("/api/facebook/broadcast-url", methods=["POST"])
+def api_broadcast_video_url():
+    data = request.json or {}
+    video_url = data.get("video_url", "").strip()
+    description = data.get("description", "").strip()
+    
+    if not video_url:
+        return jsonify({"success": False, "error": "សូមបញ្ចូល Video URL ឬ Link ជាមុនសិន!"}), 400
+        
+    cfg = load_config()
+    pages_to_post = cfg.get("facebook_selected_pages") or []
+    if not pages_to_post:
+        page_id = cfg.get("facebook_page_id")
+        access_token = cfg.get("facebook_access_token")
+        if page_id and access_token:
+            pages_to_post = [{"id": page_id, "name": "Primary Page", "access_token": access_token}]
+            
+    if not pages_to_post:
+        return jsonify({"success": False, "error": "មិនទាន់មាន Facebook Pages ត្រូវបានកំណត់ឡើយ"}), 400
+        
+    ok, summary, results = facebook_service.broadcast_video_to_pages(pages_to_post, video_url, description)
+    return jsonify({"success": ok, "message": summary, "results": results})
+
 @app.route("/static/videos/<path:filename>")
 def serve_generated_video(filename):
     if os.environ.get("VERCEL"):

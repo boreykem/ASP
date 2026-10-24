@@ -683,11 +683,17 @@ function setupEventListeners() {
   const btnPostFb = document.getElementById("btn-post-facebook");
   if (btnPostFb) btnPostFb.addEventListener("click", postSelectedScriptToFacebook);
   
+  const btnCreateVeo = document.getElementById("btn-create-veo-video");
+  if (btnCreateVeo) btnCreateVeo.addEventListener("click", createVeoVideoForSelectedScript);
+
   const btnCreateVid = document.getElementById("btn-create-video");
   if (btnCreateVid) btnCreateVid.addEventListener("click", createReelsVideoForSelectedScript);
   
   const btnBroadcastVid = document.getElementById("btn-broadcast-video-fb");
   if (btnBroadcastVid) btnBroadcastVid.addEventListener("click", broadcastRenderedVideoToFacebook);
+
+  const btnBroadcastUrl = document.getElementById("btn-broadcast-url-fb");
+  if (btnBroadcastUrl) btnBroadcastUrl.addEventListener("click", broadcastCustomVideoUrl);
   
   const btnVerifyFb = document.getElementById("btn-verify-fb");
   if (btnVerifyFb) btnVerifyFb.addEventListener("click", verifyFacebookPage);
@@ -1258,6 +1264,114 @@ async function broadcastRenderedVideoToFacebook() {
       showToast("Facebook: " + (data.error || data.message), "error");
     }
   } catch (err) {
+    showToast("Network error: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function createVeoVideoForSelectedScript() {
+  if (!selectedScriptId) {
+    showToast(currentLang === "km" ? "សូមជ្រើសរើសស្គ្រីបមួយជាមុនសិន!" : "Please select a script first!", "error");
+    return;
+  }
+  const btn = document.getElementById("btn-create-veo-video");
+  const previewBox = document.getElementById("video-preview-box");
+  const player = document.getElementById("rendered-video-player");
+  const statusEl = document.getElementById("video-info-status");
+  const downloadBtn = document.getElementById("btn-download-video");
+  
+  if (btn) btn.disabled = true;
+  showToast(currentLang === "km" ? "✨ កំពុងភ្ជាប់ទៅកាន់ Google Veo AI Video (Gemini)..." : "Connecting to Google Veo AI Video...", "info");
+  if (statusEl) {
+    statusEl.textContent = currentLang === "km" ? "⏳ កំពុងដំណើរការ Google Veo AI Video (9:16 Cinematic Reels)..." : "Generating Google Veo AI Video...";
+    statusEl.style.color = "#60a5fa";
+  }
+  previewBox.classList.remove("hidden");
+  previewBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  
+  try {
+    const res = await fetch("/api/video/veo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        script_id: selectedScriptId
+      })
+    });
+    const data = await res.json();
+    if (data.success && data.video_url) {
+      currentRenderedVideoFilename = data.filename;
+      player.src = data.video_url + "?t=" + Date.now();
+      downloadBtn.href = data.video_url;
+      if (statusEl) {
+        statusEl.innerHTML = `✅ <strong>${data.message}</strong><br>គុណភាព: 1080x1920 (9:16 Vertical) រួចរាល់សម្រាប់បង្ហោះចូល Facebook Pages!`;
+        statusEl.style.color = "#34d399";
+      }
+      showToast(currentLang === "km" ? "🎉 វីដេអូ AI ផលិតជោគជ័យ!" : "AI video generated successfully!", "success");
+    } else {
+      showToast("Google Veo: " + (data.error || "Failed"), "error");
+      if (statusEl) {
+        statusEl.textContent = "❌ " + (data.error || "Failed");
+        statusEl.style.color = "#ef4444";
+      }
+    }
+  } catch (err) {
+    showToast("Network error: " + err.message, "error");
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function broadcastCustomVideoUrl() {
+  const inputEl = document.getElementById("custom-video-url-input");
+  const url = inputEl?.value.trim();
+  const statusEl = document.getElementById("url-broadcast-status");
+  const btn = document.getElementById("btn-broadcast-url-fb");
+  
+  if (!url) {
+    showToast(currentLang === "km" ? "សូមបញ្ចូល Link វីដេអូ (MP4 URL) ជាមុនសិន!" : "Please enter a video URL first!", "error");
+    return;
+  }
+  
+  const scriptContent = document.getElementById("preview-content")?.textContent || "";
+  const topicTitle = document.getElementById("preview-topic-title")?.textContent || "Reels Video";
+  const desc = scriptContent ? `🎬 ${topicTitle}\n\n${scriptContent}` : "🎬 New Video Release #Reels";
+  
+  if (btn) btn.disabled = true;
+  if (statusEl) {
+    statusEl.textContent = currentLang === "km" ? "🚀 កំពុងបញ្ជូន Link ទៅកាន់ Facebook តាម URL Pull..." : "Sending video URL to Facebook via URL Pull...";
+    statusEl.style.color = "#60a5fa";
+  }
+  showToast(currentLang === "km" ? "🚀 កំពុងបញ្ជូន Link ទៅកាន់ Facebook Pages ទាំងអស់..." : "Broadcasting video URL to Facebook Pages...", "info");
+  
+  try {
+    const res = await fetch("/api/facebook/broadcast-url", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        video_url: url,
+        description: desc
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      if (statusEl) {
+        statusEl.textContent = "✅ " + data.message;
+        statusEl.style.color = "#34d399";
+      }
+      showToast(currentLang === "km" ? "🎉 " + data.message : "Broadcasted successfully via URL Pull!", "success");
+    } else {
+      if (statusEl) {
+        statusEl.textContent = "❌ " + (data.error || data.message);
+        statusEl.style.color = "#ef4444";
+      }
+      showToast("Facebook: " + (data.error || data.message), "error");
+    }
+  } catch (err) {
+    if (statusEl) {
+      statusEl.textContent = "❌ Network error: " + err.message;
+      statusEl.style.color = "#ef4444";
+    }
     showToast("Network error: " + err.message, "error");
   } finally {
     if (btn) btn.disabled = false;

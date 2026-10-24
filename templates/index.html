@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css?v=20261024_09">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261024_10">
 </head>
 <body>
 
@@ -321,6 +321,9 @@
                 <button id="btn-resend-script" class="btn btn-primary btn-sm">
                   📤 <span id="btn-resend-text">ផ្ញើចូល Telegram</span>
                 </button>
+                <button id="btn-create-veo-video" class="btn btn-primary btn-sm" title="ផលិតវីដេអូ AI តាម Google Veo (Gemini Video AI)">
+                  ✨ <span id="btn-create-veo-video-text">Google Veo AI Video</span>
+                </button>
                 <button id="btn-create-video" class="btn btn-accent btn-sm" title="ផលិតវីដេអូ Reels (9:16) ដោយស្វ័យប្រវត្តិ">
                   🎬 <span id="btn-create-video-text">ផលិតវីដេអូ Reels AI</span>
                 </button>
@@ -351,6 +354,26 @@
                   </div>
                 </div>
               </div>
+            </div>
+
+            <!-- URL Pull Video Broadcast Box (Direct Link to 23 Pages) -->
+            <div id="url-pull-box" style="margin-top: 15px; padding: 15px; background: rgba(59, 130, 246, 0.06); border-radius: 12px; border: 1px solid rgba(59, 130, 246, 0.25);">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <h4 style="margin: 0; color: #60a5fa; display: flex; align-items: center; gap: 6px;">
+                  <span>🔗</span> <span id="title-url-pull">បង្ហោះវីដេអូតាម URL Pull (Direct Video URL Pull to 23 Pages)</span>
+                </h4>
+                <span class="badge" style="background: rgba(59, 130, 246, 0.25); color: #bfdbfe; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px;">High Speed</span>
+              </div>
+              <p class="text-muted" id="desc-url-pull" style="font-size: 0.8rem; margin: 0 0 10px 0;">
+                💡 មិនបាច់ Render វីដេអូឡើយ! ប្រសិនបើអ្នកមាន Link វីដេអូស្រាប់ (ពី NotebookLM, Google Drive ឬ Cloud) សូម Paste នៅទីនេះ ដើម្បីឱ្យ Facebook ទាញយកទៅ Post គ្រប់ ២៣ Pages ក្នុងពេលតែ ២ វិនាទី។
+              </p>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <input type="url" id="custom-video-url-input" class="form-control" style="flex: 1; min-width: 240px;" placeholder="https://domain.com/video.mp4">
+                <button id="btn-broadcast-url-fb" class="btn btn-primary btn-sm" style="white-space: nowrap;">
+                  🚀 <span id="btn-broadcast-url-fb-text">បង្ហោះចូលគ្រប់ ២៣ Pages</span>
+                </button>
+              </div>
+              <span id="url-broadcast-status" class="text-muted" style="font-size: 0.82rem; display: block; margin-top: 6px;"></span>
             </div>
           </div>
 
@@ -599,6 +622,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- JavaScript -->
-  <script src="/static/js/app.js?v=20261024_09"></script>
+  <script src="/static/js/app.js?v=20261024_10"></script>
 </body>
 </html>
