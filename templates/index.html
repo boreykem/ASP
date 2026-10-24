@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <!-- Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=20261024_02">
 </head>
 <body>
 
@@ -204,12 +204,27 @@
               </div>
             </div>
 
-            <!-- Run Button -->
-            <div class="card-footer">
+            <!-- Run Button & Automation Options -->
+            <div class="card-footer" style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255, 255, 255, 0.04); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                <label class="switch-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                  <input type="checkbox" id="gen-auto-video" style="width: 18px; height: 18px; accent-color: var(--accent);">
+                  <span id="gen-auto-video-label">🎬 <strong>ផលិតវីដេអូ Reels 9:16 ស្វ័យប្រវត្តិ</strong> (សំឡេងខ្មែរ + B-Roll)</span>
+                </label>
+                <label class="switch-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.9rem;">
+                  <input type="checkbox" id="gen-auto-facebook" checked style="width: 18px; height: 18px; accent-color: #1877f2;">
+                  <span id="gen-auto-facebook-label">📘 <strong>Auto-Post ទៅកាន់ Facebook Pages ទាំងអស់</strong></span>
+                </label>
+              </div>
+
               <button id="btn-run-batch" class="btn btn-primary btn-block">
                 <span class="btn-icon">🚀</span>
-                <span id="btn-run-text">ចាប់ផ្តើមបង្កើតស្គ្រីប និងផ្ញើចូល Telegram</span>
+                <span id="btn-run-text">ចាប់ផ្តើមបង្កើតស្គ្រីប និងដំណើរការស្វ័យប្រវត្តិ</span>
               </button>
+
+              <div style="font-size: 0.85rem; color: #94a3b8; text-align: center; margin-top: 4px;">
+                💡 ស្គ្រីប & វីដេអូដែលផលិតរួច នឹងបង្ហាញក្នុង Tab ទី ២ <a href="javascript:void(0)" onclick="switchTab('tab-history')" style="color: var(--accent); font-weight: 600; text-decoration: underline;">«ប្រវត្តិស្គ្រីប»</a> (អាច Preview វីដេអូ 9:16 និងទាញយក MP4)
+              </div>
             </div>
           </div>
 
@@ -541,6 +556,6 @@
   <div id="toast" class="toast"></div>
 
   <!-- JavaScript -->
-  <script src="/static/js/app.js"></script>
+  <script src="/static/js/app.js?v=20261024_02"></script>
 </body>
 </html>

@@ -33,7 +33,11 @@ Desktop.ini
 # Scratch and media
 *.mp3
 *.mp4
+*.srt
+*.vtt
 static/videos/*.mp4
+static/videos/*.srt
+static/videos/*.vtt
 !static/videos/.gitkeep
 
 # Chrome automation profiles
