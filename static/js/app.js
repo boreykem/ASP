@@ -18,6 +18,7 @@ const translations = {
     tabHistory: "ប្រវត្តិស្គ្រីប",
     tabScheduler: "កាលវិភាគស្វ័យប្រវត្តិ",
     tabSettings: "ការកំណត់",
+    btnJumpSettings: "ការកំណត់ API",
     
     settingsTitle: "ការកំណត់ API (Settings)",
     settingsDesc: "កំណត់ API Key សម្រាប់ Gemini AI និង Telegram Bot របស់អ្នកដើម្បីដំណើរការប្រព័ន្ធ។",
@@ -99,6 +100,7 @@ const translations = {
     tabHistory: "Script History",
     tabScheduler: "Auto-Scheduler",
     tabSettings: "Settings",
+    btnJumpSettings: "API Settings",
     
     settingsTitle: "API Settings",
     settingsDesc: "Configure your Gemini AI and Telegram Bot credentials to run the automation system.",
@@ -436,6 +438,8 @@ function applyLanguage(lang) {
   setTxt("tab-title-history", t.tabHistory);
   setTxt("tab-title-scheduler", t.tabScheduler);
   setTxt("tab-title-settings", t.tabSettings);
+  setTxt("nav-settings-btn-label", t.tabSettings);
+  setTxt("btn-jump-settings-text", t.btnJumpSettings);
   
   // Settings
   setTxt("settings-title", t.settingsTitle);
@@ -507,24 +511,63 @@ function applyLanguage(lang) {
 // ==========================================
 // Tabs Navigation
 // ==========================================
-function setupTabs() {
+function switchTab(targetId) {
   const tabs = document.querySelectorAll(".tab-btn");
   const panes = document.querySelectorAll(".tab-pane");
+  const navSettingsBtn = document.getElementById("nav-settings-btn");
   
+  tabs.forEach(t => {
+    if (t.dataset.tab === targetId) {
+      t.classList.add("active");
+    } else {
+      t.classList.remove("active");
+    }
+  });
+  
+  panes.forEach(p => {
+    if (p.id === targetId) {
+      p.classList.add("active");
+    } else {
+      p.classList.remove("active");
+    }
+  });
+  
+  if (navSettingsBtn) {
+    if (targetId === "tab-settings") {
+      navSettingsBtn.classList.add("active");
+    } else {
+      navSettingsBtn.classList.remove("active");
+    }
+  }
+  
+  if (targetId === "tab-history") {
+    loadHistory();
+  }
+}
+
+function setupTabs() {
+  const tabs = document.querySelectorAll(".tab-btn");
   tabs.forEach(tab => {
     tab.addEventListener("click", () => {
-      tabs.forEach(t => t.classList.remove("active"));
-      panes.forEach(p => p.classList.remove("active"));
-      
-      tab.classList.add("active");
-      const target = tab.dataset.tab;
-      document.getElementById(target).classList.add("active");
-      
-      if (target === "tab-history") {
-        loadHistory();
-      }
+      switchTab(tab.dataset.tab);
     });
   });
+
+  const navSettingsBtn = document.getElementById("nav-settings-btn");
+  if (navSettingsBtn) {
+    navSettingsBtn.addEventListener("click", () => {
+      switchTab("tab-settings");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  const btnJumpSettings = document.getElementById("btn-jump-settings");
+  if (btnJumpSettings) {
+    btnJumpSettings.addEventListener("click", () => {
+      switchTab("tab-settings");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
 }
 
 // ==========================================

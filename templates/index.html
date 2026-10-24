@@ -33,6 +33,12 @@
           <span id="badge-text">Auto-Run: Off</span>
         </div>
         
+        <!-- Quick Settings Button in Top Bar -->
+        <button id="nav-settings-btn" class="nav-settings-btn" aria-label="Settings" title="ការកំណត់ API (Settings)">
+          <span>⚙️</span>
+          <span id="nav-settings-btn-label">ការកំណត់</span>
+        </button>
+
         <!-- 1-Click Language Switcher Button -->
         <button id="lang-btn" class="lang-toggle-btn" aria-label="Switch Language">
           <span class="flag-icon" id="lang-flag">🇬🇧</span>
@@ -45,7 +51,7 @@
   <!-- Main Container (Responsive Auto-Fit Layout) -->
   <main class="main-container">
 
-    <!-- Tab Navigation (3 Main Tabs) -->
+    <!-- Tab Navigation (4 Main Tabs) -->
     <nav class="tabs-nav">
       <button class="tab-btn active" data-tab="tab-generator" id="nav-generator">
         <span class="tab-icon">🚀</span>
@@ -59,55 +65,20 @@
         <span class="tab-icon">⏰</span>
         <span class="tab-text" id="tab-title-scheduler">កាលវិភាគស្វ័យប្រវត្តិ</span>
       </button>
+      <button class="tab-btn" data-tab="tab-settings" id="nav-settings">
+        <span class="tab-icon">⚙️</span>
+        <span class="tab-text" id="tab-title-settings">ការកំណត់</span>
+      </button>
     </nav>
 
     <!-- ============================================== -->
-    <!-- TAB 1: SCRIPT GENERATOR & API SETTINGS         -->
+    <!-- TAB 1: SCRIPT GENERATOR                        -->
     <!-- ============================================== -->
     <section id="tab-generator" class="tab-pane active">
       <div class="grid-layout">
 
-        <!-- Left Column: Settings, Controls & Topics -->
+        <!-- Left Column: Controls & Topics -->
         <div class="column-main">
-          
-          <!-- API Credentials Card (Pre-filled with Default Keys & Eye Toggles) -->
-          <div class="card glass-card">
-            <div class="card-header">
-              <div class="card-title-group">
-                <span class="card-icon">⚙️</span>
-                <h2 id="settings-title" class="card-title">ការកំណត់ API (Settings)</h2>
-              </div>
-              <button class="btn btn-primary btn-sm" id="btn-save-settings" title="Save Settings">
-                💾 <span id="btn-save-text">រក្សាទុក</span>
-              </button>
-            </div>
-            
-            <div class="card-body form-grid">
-              <!-- Gemini API Key -->
-              <div class="form-group">
-                <label for="gemini-key" id="lbl-gemini-key">Gemini API Key:</label>
-                <div class="input-with-button">
-                  <input type="password" id="gemini-key" class="form-control" value="" placeholder="AIzaSy... ឬ API Key របស់អ្នក">
-                  <button type="button" class="eye-btn" data-target="gemini-key" title="Toggle Visibility">👁</button>
-                </div>
-              </div>
-
-              <!-- Telegram Bot Token -->
-              <div class="form-group">
-                <label for="bot-token" id="lbl-bot-token">Telegram Bot Token:</label>
-                <div class="input-with-button">
-                  <input type="password" id="bot-token" class="form-control" value="" placeholder="1234567890:ABC... ឬ Bot Token របស់អ្នក">
-                  <button type="button" class="eye-btn" data-target="bot-token" title="Toggle Visibility">👁</button>
-                </div>
-              </div>
-
-              <!-- Telegram Chat ID -->
-              <div class="form-group">
-                <label for="chat-id" id="lbl-chat-id">Telegram Chat ID:</label>
-                <input type="text" id="chat-id" class="form-control" value="" placeholder="ឧទាហរណ៍៖ 123456789">
-              </div>
-            </div>
-          </div>
           
           <!-- Video Format & Style Card -->
           <div class="card glass-card">
@@ -116,6 +87,9 @@
                 <span class="card-icon">🎬</span>
                 <h2 id="format-title" class="card-title">ទម្រង់វីដេអូ និងទឹកដមសម្លេង</h2>
               </div>
+              <button type="button" class="btn-outline-sm" id="btn-jump-settings" title="បើកការកំណត់ API">
+                ⚙️ <span id="btn-jump-settings-text">ការកំណត់ API</span>
+              </button>
             </div>
             <div class="card-body form-grid-2col">
               <div class="form-group">
@@ -390,6 +364,65 @@
 
           <button id="btn-save-scheduler" class="btn btn-primary btn-block">
             💾 <span id="btn-save-sched-text">រក្សាទុកកាលវិភាគ</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================== -->
+    <!-- TAB 4: API SETTINGS                           -->
+    <!-- ============================================== -->
+    <section id="tab-settings" class="tab-pane">
+      <div class="card glass-card max-w-lg">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-icon">⚙️</span>
+            <div>
+              <h2 id="settings-title" class="card-title">ការកំណត់ API (Settings)</h2>
+              <p class="card-subtitle text-muted" id="settings-desc">កំណត់ API Key សម្រាប់ Gemini AI និង Telegram Bot របស់អ្នកដើម្បីដំណើរការប្រព័ន្ធ។</p>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" id="btn-save-settings" title="Save Settings">
+            💾 <span id="btn-save-text">រក្សាទុក</span>
+          </button>
+        </div>
+        
+        <div class="card-body form-grid">
+          <!-- Gemini API Key -->
+          <div class="form-group">
+            <label for="gemini-key" id="lbl-gemini-key">Gemini API Key:</label>
+            <div class="input-with-button">
+              <input type="password" id="gemini-key" class="form-control" value="" placeholder="AIzaSy... ឬ API Key របស់អ្នក">
+              <button type="button" class="eye-btn" data-target="gemini-key" title="Toggle Visibility">👁</button>
+            </div>
+          </div>
+
+          <!-- Telegram Bot Token -->
+          <div class="form-group">
+            <label for="bot-token" id="lbl-bot-token">Telegram Bot Token:</label>
+            <div class="input-with-button">
+              <input type="password" id="bot-token" class="form-control" value="" placeholder="1234567890:ABC... ឬ Bot Token របស់អ្នក">
+              <button type="button" class="eye-btn" data-target="bot-token" title="Toggle Visibility">👁</button>
+            </div>
+          </div>
+
+          <!-- Telegram Chat ID -->
+          <div class="form-group">
+            <label for="chat-id" id="lbl-chat-id">Telegram Chat ID:</label>
+            <input type="text" id="chat-id" class="form-control" value="" placeholder="ឧទាហរណ៍៖ 123456789">
+          </div>
+
+          <!-- Security Privacy Banner -->
+          <div class="info-banner">
+            <div class="info-icon">🔒</div>
+            <div class="info-content">
+              <strong id="settings-security-title">សុវត្ថិភាពទិន្នន័យ៖</strong>
+              <p id="settings-security-desc">ទិន្នន័យ API Key និង Token ទាំងអស់ត្រូវបានរក្សាទុកតែលើ Server ផ្ទាល់ខ្លួនរបស់អ្នកប៉ុណ្ណោះ គ្មាននរណាម្នាក់អាចមើលឃើញឡើយ។</p>
+            </div>
+          </div>
+
+          <button class="btn btn-primary btn-block" id="btn-save-settings-bottom" title="Save All Settings">
+            💾 <span id="btn-save-text-bottom">រក្សាទុកការកំណត់ទាំងអស់</span>
           </button>
         </div>
       </div>
