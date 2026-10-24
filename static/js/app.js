@@ -11,7 +11,7 @@
 const translations = {
   km: {
     appTitle: "AI Script Automation Pro",
-    appSubtitle: "ប្រព័ន្ធបង្កើតស្គ្រីបវីដេអូ AI & ផ្ញើចូល Telegram ស្វ័យប្រវត្តិ",
+    appSubtitle: "ប្រព័ន្ធបង្កើតស្គ្រីប & ផលិតវីដេអូ Reels ស្វ័យប្រវត្តិ",
     langButton: "English",
     langFlag: "🇬🇧",
     tabGenerator: "បង្កើតស្គ្រីប",
@@ -76,7 +76,7 @@ const translations = {
     topicsSubtext: "💡 <strong>ចំណាំ៖</strong> ប្រធានបទទាំង ២ នេះនឹងប្តូរថ្មីៗជារៀងរាល់ថ្ងៃដោយស្វ័យប្រវត្តិ។ លោកអ្នកអាចកែសម្រួល ឬវាយប្រធានបទផ្ទាល់ខ្លួនបានគ្រប់ពេល។",
     topicPlaceholder: "ប្រធានបទ (ស្វ័យប្រវត្តិ)",
     
-    btnRun: "ចាប់ផ្តើមបង្កើតស្គ្រីប និងផ្ញើចូល Telegram",
+    btnRun: "ចាប់ផ្តើមបង្កើតស្គ្រីប & ផលិតវីដេអូ Reels",
     btnRunning: "🚀 កំពុងដំណើរការ...",
     
     logsTitle: "ដំណើរការ (Live Logs)",
@@ -116,7 +116,7 @@ const translations = {
   
   en: {
     appTitle: "AI Script Automation Pro",
-    appSubtitle: "AI Video Script Generator & Auto Telegram Broadcast",
+    appSubtitle: "AI Video Script & Reels Auto-Production System",
     langButton: "ភាសាខ្មែរ",
     langFlag: "🇰🇭",
     tabGenerator: "Generator",
@@ -184,7 +184,7 @@ const translations = {
     topicsSubtext: "💡 <strong>Note:</strong> These 2 topics rotate daily automatically. You can edit or type custom topics anytime.",
     topicPlaceholder: "Topic (Auto-generated)",
     
-    btnRun: "Start Generating & Broadcast to Telegram",
+    btnRun: "Start Generating Scripts & Reels Videos",
     btnRunning: "🚀 Running Batch...",
     
     logsTitle: "Live Execution Logs",
